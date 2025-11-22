@@ -1,108 +1,172 @@
-import React, { useState, useEffect, lazy } from "react";
+import React from "react";
+import DoctorSVG from "./components/DoctorSVG";
 
-// 1. Lazy Loading setup
-const MedicalSvg = lazy(() => import("./components/MedicalSvg"));
+const featureData = [
+  {
+    title: "AI-Powered Analysis",
+    desc: "Rapid and reliable disease correlation powered by advanced AI.",
+    color: "#3A8DFF",
+  },
+  {
+    title: "Data Privacy First",
+    desc: "Your medical data stays secure and encrypted throughout.",
+    color: "#21C784",
+  },
+  {
+    title: "Instant Access",
+    desc: "Access all your previous analyses and predictions any time.",
+    color: "#FFE066",
+  },
+];
 
-const HomePage = ({ onStartForm }) => {
-  const [isVisible, setIsVisible] = useState(false);
-
-  // 2. Animation effect (fade-in)
-  useEffect(() => {
-    setTimeout(() => setIsVisible(true), 100);
-  }, []);
-
+export default function HomePage({ onStartForm }) {
   return (
     <div
       style={{
-        maxWidth: "900px",
-        margin: "40px auto",
-        padding: "30px",
-        borderRadius: "10px",
-        backgroundColor: "white",
-        boxShadow: "0 4px 8px rgba(0,0,0,0.05)",
-        opacity: isVisible ? 1 : 0, // Fade-in Animation
-        transition: "opacity 1s ease-in-out",
+        fontFamily: "Inter, Segoe UI, Arial",
+        background: "#F5FAFE",
+        minHeight: "100vh",
       }}
     >
+      {/* Hero Section */}
       <div
         style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          maxWidth: 1200,
+          margin: "40px auto 0",
+          padding: 32,
+          borderRadius: 22,
+          background: "#fff",
+          boxShadow: "0 8px 32px #3A8DFF12",
+        }}
+      >
+        <div style={{ maxWidth: 440 }}>
+          <h1
+            style={{
+              color: "#3A8DFF",
+              fontSize: "2.7rem",
+              fontWeight: 900,
+              marginBottom: 14,
+              lineHeight: 1.1,
+            }}
+          >
+            Empowering health through data analysis{" "}
+            <span style={{ color: "#21C784" }}>and AI</span>
+          </h1>
+          <p style={{ color: "#182E49", fontSize: "1.18em", marginBottom: 31 }}>
+            Begin your journey towards smarter healthcare insights.
+          </p>
+          <button
+            onClick={onStartForm}
+            style={{
+              background: "linear-gradient(90deg,#3A8DFF,#21C784)",
+              color: "#fff",
+              fontWeight: 700,
+              letterSpacing: 0.2,
+              fontSize: "1.14em",
+              border: "none",
+              borderRadius: 14,
+              padding: "15px 36px",
+              boxShadow: "0 4px 16px #3A8DFF44",
+              cursor: "pointer",
+              transition: ".15s transform",
+            }}
+            onMouseOver={(e) =>
+              (e.currentTarget.style.transform = "scale(1.04)")
+            }
+            onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1)")}
+          >
+            Start Analysis
+          </button>
+        </div>
+        <div>
+          <DoctorSVG />
+        </div>
+      </div>
+
+      {/* About Section */}
+      <div
+        style={{
+          maxWidth: 950,
+          margin: "48px auto 0",
+          background: "#fff",
+          borderRadius: 14,
+          padding: "32px 42px",
+          boxShadow: "0 4px 16px #21C78424",
           textAlign: "center",
-          marginBottom: "30px",
-          fontFamily: "Inter",
         }}
       >
         <h2
           style={{
-            color: "#0047AB",
-            fontFamily: "Inter",
-            fontSize: "2.1em",
-            lineHeight: "1.4",
+            fontSize: "2rem",
+            color: "#3A8DFF",
+            fontWeight: 700,
+            marginBottom: 15,
           }}
         >
-          Empowering Health Through Data Analysis
+          About Med Predict AI
         </h2>
+        <p style={{ fontSize: "1.18em", color: "#4F6076" }}>
+          Med Predict AI helps users bridge the gap between raw medical lab
+          results and actionable healthcare advice. Upload your results and get
+          instant, AI-driven insights, securely and privately.
+        </p>
       </div>
 
-      <p style={{ fontSize: "1.1em", lineHeight: "1.6", fontFamily: "Inter" }}>
-        Welcome to the <strong>Med-Analysis Portal</strong>, your digital
-        solution for preliminary medical report evaluation. Securely submit your
-        lab test results, and our system will provide an accurate assesment of
-        potential disease correlations.
-      </p>
-
-      <p
-        style={{ fontWeight: "bold", fontSize: "1.2rem", fontFamily: "Inter" }}
-      >
-        Key features:
-      </p>
-      <ul
-        style={{
-          marginLeft: "20px",
-          fontSize: "1.0em",
-          lineHeight: "1.6",
-          fontFamily: "Inter",
-          color: "#333",
-        }}
-      >
-        <li style={{ textDecoration: "none" }}>
-          Secure Share: Fill out the <strong>Mandatory test results </strong>in
-          the report form.
-        </li>
-        <li>
-          Data History: Access all of yours{" "}
-          <strong>previous submissions</strong> and <strong>predicitons</strong>{" "}
-          in the History.
-        </li>
-      </ul>
-
-      <button
-        onClick={onStartForm}
-        style={{
-          marginTop: "30px",
-          padding: "12px 25px",
-          fontSize: "1.1em",
-          backgroundColor: "#007ACC",
-          color: "white",
-          border: "none",
-          borderRadius: "5px",
-          cursor: "pointer",
-          display: "block",
-          width: "100%",
-        }}
-      >
-        Start New Analysis
-      </button>
-
-      {/* 3. Lazy Loading Implementation */}
+      {/* Features Section */}
       <div
         style={{
-          marginTop: "40px",
-          borderTop: "1px solid #eee",
-          paddingTop: "20px",
+          display: "flex",
+          justifyContent: "center",
+          gap: 35,
+          maxWidth: 1140,
+          margin: "48px auto",
         }}
-      ></div>
+      >
+        {featureData.map((f, i) => (
+          <div
+            key={i}
+            style={{
+              background: f.color + "20",
+              padding: 32,
+              borderRadius: 16,
+              minWidth: 260,
+              boxShadow: "0 4px 16px " + f.color + "22",
+              flex: 1,
+              margin: "0 8px",
+            }}
+          >
+            <h3
+              style={{
+                color: f.color,
+                fontSize: "1.27em",
+                fontWeight: 700,
+                marginBottom: 13,
+              }}
+            >
+              {f.title}
+            </h3>
+            <p style={{ color: "#4F6076", fontSize: "1.1em" }}>{f.desc}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Footer */}
+      <footer
+        style={{
+          background: "#3A8DFF",
+          color: "#fff",
+          padding: "16px 0",
+          textAlign: "center",
+          borderRadius: "18px 18px 0 0",
+          marginTop: 54,
+          fontSize: "1.07em",
+        }}
+      >
+        © {new Date().getFullYear()} Med Predict AI &middot; Empowering health
+      </footer>
     </div>
   );
-};
-
-export default HomePage;
+}

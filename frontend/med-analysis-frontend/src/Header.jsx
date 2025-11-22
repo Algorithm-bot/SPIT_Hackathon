@@ -1,98 +1,167 @@
-import React, { useState } from "react";
-import AuthModal from "./components/AuthModal";
+import React, { useState, useRef, useEffect } from "react";
 
-const Header = ({ user, setUser, onLogout, onNavigate }) => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalType, setModalType] = useState("login");
+function ProfileDropdown({ onHistory, onLogout }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef();
+  useEffect(() => {
+    function handleClick(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+  return (
+    <div style={{ position: "relative", marginLeft: 20 }} ref={ref}>
+      <div
+        style={{
+          width: 44,
+          height: 44,
+          borderRadius: "50%",
+          background: "linear-gradient(45deg, #3A8DFF 56%, #21C784 120%)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "#fff",
+          fontWeight: 800,
+          fontSize: 22,
+          cursor: "pointer",
+          border: "3px solid #fff",
+          boxShadow: "0 2px 8px #21C78433",
+        }}
+        onClick={() => setOpen(!open)}
+        title="Profile and history"
+      >
+        {/* Fallback initial or SVG profile */}
+        <span>A</span>
+      </div>
+      {open && (
+        <div
+          style={{
+            position: "absolute",
+            right: 0,
+            top: 50,
+            background: "#fff",
+            boxShadow: "0 4px 24px #3A8DFF33",
+            borderRadius: 14,
+            color: "#182E49",
+            padding: "18px 24px",
+            minWidth: 180,
+            zIndex: 1000,
+          }}
+        >
+          <button
+            onClick={onHistory}
+            style={{
+              border: "none",
+              background: "none",
+              color: "#3A8DFF",
+              fontWeight: 600,
+              fontSize: "1em",
+              cursor: "pointer",
+              marginBottom: 9,
+            }}
+          >
+            History
+          </button>
+          <br />
+          <button
+            onClick={onLogout}
+            style={{
+              border: "none",
+              background: "none",
+              color: "#e55151",
+              fontWeight: 500,
+              fontSize: "1em",
+              cursor: "pointer",
+            }}
+          >
+            Logout
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
 
-  const openModal = (type) => {
-    setModalType(type);
-    setIsModalOpen(true);
-  };
-
-  const buttonStyle = {
-    margin: "0 10px",
-    padding: "8px 15px",
-    border: "none",
-    borderRadius: "5px",
-    cursor: "pointer",
-    backgroundColor: "#007ACC",
-    color: "white",
-    fontSize: "1em",
-    fontFamily: "Roboto",
-  };
-
-  const navButtonStyle = {
-    ...buttonStyle,
-    backgroundColor: "transparent",
-    color: "#0047AB",
-    fontWeight: "bold",
-    fontFamily: "Roboto",
-  };
-
+export default function Header({ user, onLogout, onNavigate }) {
   return (
     <header
       style={{
+        background: "linear-gradient(90deg,#3A8DFF,#21C784)",
+        padding: "1.5rem 3rem",
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
-        padding: "10px 40px",
-        backgroundColor: "#ADD8E6" /* Light Blue Header */,
-        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+        borderRadius: "0 0 20px 20px",
       }}
     >
-      <h1
+      <div
+        style={{
+          fontSize: "2rem",
+          color: "#fff",
+          fontWeight: 800,
+          cursor: "pointer",
+        }}
         onClick={() => onNavigate("home")}
-        style={{ cursor: "pointer", color: "#0047AB", fontFamily: "Roboto" }}
       >
         Med Predict AI
-      </h1>
+      </div>
       <nav>
-        <button onClick={() => onNavigate("home")} style={navButtonStyle}>
+        <button
+          style={{
+            background: "none",
+            border: "none",
+            color: "#fff",
+            margin: "0 1.1rem",
+            fontSize: "1.07em",
+            fontWeight: 600,
+            cursor: "pointer",
+          }}
+          onClick={() => onNavigate("home")}
+        >
           Home
         </button>
-        <button onClick={() => onNavigate("form")} style={navButtonStyle}>
+        <button
+          style={{
+            background: "none",
+            border: "none",
+            color: "#fff",
+            margin: "0 1.1rem",
+            fontSize: "1.07em",
+            fontWeight: 600,
+            cursor: "pointer",
+          }}
+          onClick={() => onNavigate("form")}
+        >
           Submit Report
         </button>
-        {user && (
-          <button onClick={() => onNavigate("history")} style={navButtonStyle}>
-            History
-          </button>
-        )}
       </nav>
       <div>
         {user ? (
-          <>
-            <span style={{ marginRight: "15px", color: "#0047AB" }}>
-              Welcome, **{user.email}**!
-            </span>
-            <button onClick={onLogout} style={buttonStyle}>
-              Logout
-            </button>
-          </>
+          <ProfileDropdown
+            onHistory={() => onNavigate("history")}
+            onLogout={onLogout}
+          />
         ) : (
-          <>
-            <button
-              onClick={() => openModal("login")}
-              style={{ ...buttonStyle, marginRight: "10px" }}
-            >
-              Login
-            </button>
-            <button onClick={() => openModal("signup")} style={buttonStyle}>
-              Signup
-            </button>
-          </>
+          <button
+            onClick={() => onNavigate("login")}
+            style={{
+              marginLeft: 20,
+              background: "#fff",
+              color: "#3A8DFF",
+              border: "none",
+              borderRadius: 14,
+              padding: "10px 22px",
+              fontWeight: 600,
+              fontSize: "1.07em",
+              cursor: "pointer",
+              boxShadow: "0 2px 7px #3A8DFF24",
+            }}
+          >
+            Login
+          </button>
         )}
       </div>
-      {isModalOpen && (
-        <AuthModal
-          type={modalType}
-          onClose={() => setIsModalOpen(false)}
-          setUser={setUser}
-        />
-      )}
     </header>
   );
-};
-
-export default Header;
+}
