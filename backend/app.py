@@ -10,8 +10,8 @@ import json
 app = FastAPI()
 
 # Load model + scaler
-model = joblib.load("model/medi_guard_model.pkl")
-scaler = json.load(open("model/scaler.json"))
+model = joblib.load("model/medi_guard_merged_model.pkl")
+scaler = json.load(open("model/scaler_improved.json"))
 
 class RawInput(BaseModel):
     Glucose: float
