@@ -1,167 +1,118 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
+import "./components/ProfileDropdown.css";
 
-function ProfileDropdown({ onHistory, onLogout }) {
+const stringToColor = (str) => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return `hsl(${hash % 360},63%,72%)`;
+};
+
+function ProfileDropdown({ user, onHistory, onLogout }) {
   const [open, setOpen] = useState(false);
-  const ref = useRef();
-  useEffect(() => {
-    function handleClick(e) {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
+  const profileRef = useRef();
+
   return (
-    <div style={{ position: "relative", marginLeft: 20 }} ref={ref}>
+    <div className="profile-dropdown" ref={profileRef}>
       <div
+        className="profile-circle"
+        onClick={() => setOpen((v) => !v)}
         style={{
-          width: 44,
-          height: 44,
+          background: user ? stringToColor(user.email) : "#ccc",
+          color: "#fff",
+          width: 46,
+          height: 46,
           borderRadius: "50%",
-          background: "linear-gradient(45deg, #3A8DFF 56%, #21C784 120%)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          color: "#fff",
-          fontWeight: 800,
-          fontSize: 22,
+          fontWeight: 700,
+          fontSize: "1.3rem",
           cursor: "pointer",
-          border: "3px solid #fff",
-          boxShadow: "0 2px 8px #21C78433",
+          position: "relative",
+          transition: "box-shadow .18s",
+          boxShadow: open ? "0 4px 24px #3A8DFF55" : "none",
         }}
-        onClick={() => setOpen(!open)}
-        title="Profile and history"
       >
-        {/* Fallback initial or SVG profile */}
-        <span>A</span>
+        {user?.email?.[0]?.toUpperCase() || "?"}
+        {open && (
+          <div className="dropdown-list">
+            <div className="dropdown-item" onClick={onHistory}>
+              History
+            </div>
+            <div className="dropdown-item" onClick={onLogout}>
+              Logout
+            </div>
+          </div>
+        )}
       </div>
-      {open && (
-        <div
-          style={{
-            position: "absolute",
-            right: 0,
-            top: 50,
-            background: "#fff",
-            boxShadow: "0 4px 24px #3A8DFF33",
-            borderRadius: 14,
-            color: "#182E49",
-            padding: "18px 24px",
-            minWidth: 180,
-            zIndex: 1000,
-          }}
-        >
-          <button
-            onClick={onHistory}
-            style={{
-              border: "none",
-              background: "none",
-              color: "#3A8DFF",
-              fontWeight: 600,
-              fontSize: "1em",
-              cursor: "pointer",
-              marginBottom: 9,
-            }}
-          >
-            History
-          </button>
-          <br />
-          <button
-            onClick={onLogout}
-            style={{
-              border: "none",
-              background: "none",
-              color: "#e55151",
-              fontWeight: 500,
-              fontSize: "1em",
-              cursor: "pointer",
-            }}
-          >
-            Logout
-          </button>
-        </div>
-      )}
     </div>
   );
 }
-
 export default function Header({ user, onLogout, onNavigate }) {
   return (
     <header
       style={{
-        background: "linear-gradient(90deg,#3A8DFF,#21C784)",
-        padding: "1.5rem 3rem",
         display: "flex",
-        justifyContent: "space-between",
+        background: "linear-gradient(90deg,#3A8DFF,#21C784)",
+        padding: "20px 40px",
         alignItems: "center",
-        borderRadius: "0 0 20px 20px",
+        justifyContent: "space-between",
       }}
     >
       <div
-        style={{
-          fontSize: "2rem",
-          color: "#fff",
-          fontWeight: 800,
-          cursor: "pointer",
-        }}
         onClick={() => onNavigate("home")}
+        style={{
+          cursor: "pointer",
+          color: "#fff",
+          fontWeight: 700,
+          fontSize: "1.7rem",
+        }}
       >
         Med Predict AI
       </div>
       <nav>
-        <button
-          style={{
-            background: "none",
-            border: "none",
-            color: "#fff",
-            margin: "0 1.1rem",
-            fontSize: "1.07em",
-            fontWeight: 600,
-            cursor: "pointer",
-          }}
-          onClick={() => onNavigate("home")}
-        >
+        <button onClick={() => onNavigate("home")} style={navBtn}>
           Home
         </button>
-        <button
-          style={{
-            background: "none",
-            border: "none",
-            color: "#fff",
-            margin: "0 1.1rem",
-            fontSize: "1.07em",
-            fontWeight: 600,
-            cursor: "pointer",
-          }}
-          onClick={() => onNavigate("form")}
-        >
+        <button onClick={() => onNavigate("form")} style={navBtn}>
           Submit Report
         </button>
       </nav>
-      <div>
-        {user ? (
-          <ProfileDropdown
-            onHistory={() => onNavigate("history")}
-            onLogout={onLogout}
-          />
-        ) : (
-          <button
-            onClick={() => onNavigate("login")}
-            style={{
-              marginLeft: 20,
-              background: "#fff",
-              color: "#3A8DFF",
-              border: "none",
-              borderRadius: 14,
-              padding: "10px 22px",
-              fontWeight: 600,
-              fontSize: "1.07em",
-              cursor: "pointer",
-              boxShadow: "0 2px 7px #3A8DFF24",
-            }}
-          >
-            Login
-          </button>
-        )}
-      </div>
+      {user ? (
+        <ProfileDropdown
+          user={user}
+          onHistory={() => onNavigate("history")}
+          onLogout={onLogout}
+        />
+      ) : (
+        <button style={loginBtn} onClick={() => onNavigate("login")}>
+          Login
+        </button>
+      )}
     </header>
   );
 }
+
+const navBtn = {
+  background: "transparent",
+  color: "#fff",
+  border: "none",
+  fontWeight: 500,
+  fontSize: "1rem",
+  margin: "0 0.9rem",
+  padding: "8px 18px",
+  borderRadius: "18px",
+  cursor: "pointer",
+};
+const loginBtn = {
+  background: "#fff",
+  color: "#3A8DFF",
+  fontWeight: 600,
+  border: "none",
+  borderRadius: "22px",
+  padding: "10px 28px",
+  fontSize: "1.1rem",
+  cursor: "pointer",
+};

@@ -2,26 +2,22 @@ import React from "react";
 
 const DoctorSVG = () => (
   <svg
-    width="240"
-    height="220"
-    viewBox="0 0 240 220"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
+    width="260"
+    height="260"
+    viewBox="0 0 512 512"
+    style={{ animation: "floatY 4s ease-in-out infinite" }}
   >
-    {/* Example SVG: Replace with detailed animated SVG as needed */}
-    <circle cx="120" cy="110" r="100" fill="#3A8DFF">
-      <animate
-        attributeName="r"
-        values="95;105;95"
-        dur="2s"
-        repeatCount="indefinite"
-      />
-    </circle>
-    <ellipse cx="120" cy="130" rx="50" ry="65" fill="#fff" />
-    <ellipse cx="120" cy="85" rx="32" ry="30" fill="#ffe066" />
-    <rect x="105" y="145" width="30" height="45" rx="12" fill="#21C784" />
-    <ellipse cx="120" cy="110" rx="16" ry="14" fill="#fff" />
-    {/* Face, mask, stethoscope can be added for realism */}
+    <circle cx="256" cy="256" r="120" fill="#3A8DFF" />
+    <ellipse cx="256" cy="230" rx="58" ry="80" fill="#FFF" />
+    {/* You can replace with a detailed SVG (e.g., OpenDoodles doctor) */}
+    <style>
+      {`
+        @keyframes floatY {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-18px); }
+        }
+      `}
+    </style>
   </svg>
 );
 

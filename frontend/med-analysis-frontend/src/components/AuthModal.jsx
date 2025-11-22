@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-const AuthModal = ({ type, onClose, setUser }) => {
+const AuthModal = ({ type, onClose, setUser, onToggleType }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -12,42 +12,67 @@ const AuthModal = ({ type, onClose, setUser }) => {
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: "rgba(0, 0, 0, 0.6)",
-      zIndex: 1000,
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      zIndex: 1100,
       display: "flex",
       justifyContent: "center",
       alignItems: "center",
     },
     content: {
-      backgroundColor: "white",
-      padding: "30px",
-      borderRadius: "10px",
-      maxWidth: "400px",
+      background: "#fff",
+      padding: "36px 32px 26px",
+      borderRadius: "22px",
+      maxWidth: "370px",
       width: "90%",
-      boxShadow: "0 5px 20px rgba(0, 0, 0, 0.4)",
-      border: "2px solid #ADD8E6",
+      boxShadow: "0 10px 36px #3a8dff21",
+      border: "2px solid #3A8DFF",
+      position: "relative",
+      textAlign: "center",
     },
     input: {
       width: "100%",
-      padding: "10px",
-      margin: "8px 0",
-      border: "1px solid #ccc",
-      borderRadius: "4px",
+      padding: "13px",
+      margin: "9px 0 18px",
+      border: "1.5px solid #99c9ff",
+      borderRadius: "7px",
+      fontSize: "1rem",
+      outline: "none",
+      transition: "border .2s",
     },
     button: {
       width: "100%",
-      padding: "12px",
-      marginTop: "15px",
-      backgroundColor: "#007ACC",
-      color: "white",
+      padding: "14px",
+      marginTop: "10px",
+      background: "linear-gradient(90deg,#3A8DFF,#21C784)",
+      color: "#fff",
       border: "none",
-      borderRadius: "5px",
+      borderRadius: "12px",
+      fontWeight: 700,
+      fontSize: "1.1rem",
       cursor: "pointer",
+      boxShadow: "0 3px 14px #21C78433",
+    },
+    close: {
+      background: "#eee",
+      color: "#3A8DFF",
+      border: "none",
+      borderRadius: "8px",
+      width: "100%",
+      padding: "11px",
+      marginTop: "13px",
+      cursor: "pointer",
+      fontWeight: 500,
+    },
+    toggleLink: {
+      marginTop: "18px",
+      color: "#3A8DFF",
+      cursor: "pointer",
+      fontWeight: 600,
+      fontSize: ".97rem",
     },
   };
 
   const validateAuth = () => {
-    // Validation: Mandatory non-empty fields
     if (email.trim() === "" || password.trim() === "") {
       setError("Both email and password are mandatory.");
       return false;
@@ -59,9 +84,7 @@ const AuthModal = ({ type, onClose, setUser }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!validateAuth()) return;
-
     let users = JSON.parse(localStorage.getItem("med_users")) || [];
-
     if (type === "signup") {
       if (users.find((u) => u.email === email)) {
         setError("User already exists. Please log in.");
@@ -89,42 +112,72 @@ const AuthModal = ({ type, onClose, setUser }) => {
     }
   };
 
+  // handle click outside modal to close
+  const handleOverlayClick = (e) => {
+    if (e.target === e.currentTarget) onClose();
+  };
+
   return (
-    <div style={modalStyles.overlay} onClick={onClose}>
+    <div style={modalStyles.overlay} onClick={handleOverlayClick}>
       <div style={modalStyles.content} onClick={(e) => e.stopPropagation()}>
-        <h3 style={{ color: "#0047AB" }}>
-          {type === "login" ? "Login" : "Signup"}
+        <h3
+          style={{
+            color: "#3A8DFF",
+            marginBottom: 15,
+            fontWeight: 800,
+            fontSize: "1.45rem",
+          }}
+        >
+          {type === "login"
+            ? "Login to Med Predict AI"
+            : "Sign Up for Med Predict AI"}
         </h3>
-        <form onSubmit={handleSubmit}>
-          <label>Email:</label>
+        {error && (
+          <div
+            style={{
+              background: "#ffefef",
+              color: "#a32424",
+              borderRadius: "7px",
+              padding: "8px 0",
+              marginBottom: 8,
+            }}
+          >
+            {error}
+          </div>
+        )}
+        <form onSubmit={handleSubmit} autoComplete="off">
           <input
             type="email"
             value={email}
+            placeholder="Email"
+            autoFocus
             onChange={(e) => setEmail(e.target.value)}
             style={modalStyles.input}
           />
-          <label>Password:</label>
           <input
             type="password"
             value={password}
+            placeholder="Password"
             onChange={(e) => setPassword(e.target.value)}
             style={modalStyles.input}
           />
-          {error && <p style={{ color: "red", fontSize: "0.9em" }}>{error}</p>}
           <button type="submit" style={modalStyles.button}>
             {type === "login" ? "Login" : "Sign Up"}
           </button>
         </form>
-        <button
-          onClick={onClose}
-          style={{
-            ...modalStyles.button,
-            backgroundColor: "#ccc",
-            marginTop: "10px",
-          }}
-        >
+        <button onClick={onClose} style={modalStyles.close}>
           Close
         </button>
+        <div
+          style={modalStyles.toggleLink}
+          onClick={() =>
+            onToggleType && onToggleType(type === "login" ? "signup" : "login")
+          }
+        >
+          {type === "login"
+            ? "Don't have an account? Sign Up"
+            : "Already have an account? Login"}
+        </div>
       </div>
     </div>
   );
