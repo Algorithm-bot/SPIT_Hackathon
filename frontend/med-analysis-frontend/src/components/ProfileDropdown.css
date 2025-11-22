@@ -1,0 +1,41 @@
+.profile-dropdown {
+  position: relative;
+  margin-left: 18px;
+}
+.profile-circle:active,
+.profile-circle:focus-visible {
+  outline: 2px solid #fff;
+}
+.dropdown-list {
+  position: absolute;
+  right: 0;
+  top: 58px;
+  width: 122px;
+  background: #fff;
+  color: #222;
+  box-shadow: 0 8px 28px #3a8dff30;
+  border-radius: 18px;
+  z-index: 20;
+  padding: 0.6rem 0;
+  animation: fadein 0.23s;
+}
+.dropdown-item {
+  padding: 12px 20px;
+  cursor: pointer;
+  border-radius: 12px;
+  font-weight: 500;
+  transition: background 0.13s;
+}
+.dropdown-item:hover {
+  background: #3a8dff12;
+}
+@keyframes fadein {
+  from {
+    opacity: 0;
+    transform: translateY(-18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
