@@ -1,69 +1,115 @@
 import pandas as pd
-from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import classification_report, accuracy_score
-from sklearn.utils.class_weight import compute_class_weight
+import numpy as np
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.preprocessing import LabelEncoder
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+from xgboost import XGBClassifier
 import joblib
-import json
+import warnings
 
-# Load dataset
-df = pd.read_csv("data/train.csv")
+warnings.filterwarnings("ignore")
 
-# Separate features & target
+print("===================================================")
+print("      MEDI-GUARD MERGED MODEL TRAINING (FINAL)      ")
+print("===================================================\n")
+
+# ----------------------------------------------------
+# 1. LOAD AND MERGE DATASETS
+# ----------------------------------------------------
+print("[1] Loading train.csv and test.csv ...")
+
+train = pd.read_csv("data/train.csv")
+test = pd.read_csv("data/test.csv")
+
+print(f"Original Train: {train.shape}")
+print(f"Original Test:  {test.shape}")
+
+# Drop predictions column if exists in test.csv
+if "Predicted_Disease" in test.columns:
+    test = test.drop("Predicted_Disease", axis=1)
+
+# Merge datasets
+df = pd.concat([train, test], ignore_index=True)
+
+# Remove duplicates (optional but recommended)
+df = df.drop_duplicates()
+
+print(f"Merged Dataset Shape: {df.shape}")
+print("Class Distribution (Merged):")
+print(df["Disease"].value_counts(), "\n")
+
+# ----------------------------------------------------
+# 2. PREPARE FEATURES & TARGET
+# ----------------------------------------------------
 X = df.drop("Disease", axis=1)
 y = df["Disease"]
 
-# Save Min/Max only if needed for API scaling (but dataset already normalized)
-TRAIN_MIN = X.min().to_dict()
-TRAIN_MAX = X.max().to_dict()
-json.dump({"min": TRAIN_MIN, "max": TRAIN_MAX}, open("model/scaler.json", "w"))
+# Label Encode classes
+label_encoder = LabelEncoder()
+y_encoded = label_encoder.fit_transform(y)
 
-# Split dataset
+# ----------------------------------------------------
+# 3. TRAIN-TEST SPLIT (STRATIFIED)
+# ----------------------------------------------------
+print("[2] Splitting merged dataset...")
+
 X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=42, stratify=y
+    X, y_encoded, test_size=0.2, random_state=42, stratify=y_encoded
 )
 
-# Compute class weights to handle class imbalance
-classes = y.unique()
-class_weights = compute_class_weight(
-    class_weight="balanced",
-    classes=classes,
-    y=y
-)
-weight_dict = {cls: weight for cls, weight in zip(classes, class_weights)}
+print(f"Training Samples: {X_train.shape}")
+print(f"Testing Samples:  {X_test.shape}\n")
 
-# Hyperparameter tuning for Random Forest
-param_grid = {
-    "n_estimators": [150, 250, 350],
-    "max_depth": [10, 20, 30, None],
-    "min_samples_split": [2, 5],
-    "min_samples_leaf": [1, 2],
-}
+# ----------------------------------------------------
+# 4. TRAIN XGBOOST MODEL
+# ----------------------------------------------------
+print("[3] Training XGBoost model (optimized parameters)...")
 
-rf = RandomForestClassifier(class_weight=weight_dict, random_state=42)
-
-grid_search = GridSearchCV(
-    estimator=rf,
-    param_grid=param_grid,
-    cv=3,
-    scoring="accuracy",
-    n_jobs=-1,
-    verbose=1
+model = XGBClassifier(
+    n_estimators=600,
+    max_depth=7,
+    learning_rate=0.05,
+    subsample=0.9,
+    colsample_bytree=0.9,
+    eval_metric="mlogloss",
+    reg_lambda=1.0,
+    random_state=42
 )
 
-grid_search.fit(X_train, y_train)
+model.fit(X_train, y_train)
 
-best_model = grid_search.best_estimator_
+# ----------------------------------------------------
+# 5. EVALUATION
+# ----------------------------------------------------
+print("\n================ MODEL PERFORMANCE ================\n")
 
-print("Best Parameters:", grid_search.best_params_)
+pred = model.predict(X_test)
+acc = accuracy_score(y_test, pred)
 
-# Evaluate
-y_pred = best_model.predict(X_test)
+print(f"🎯 Test Accuracy: {acc*100:.2f}%\n")
 
-print("\nAccuracy:", accuracy_score(y_test, y_pred))
-print("\nClassification Report:\n", classification_report(y_test, y_pred))
+print("Classification Report:")
+print(classification_report(y_test, pred, target_names=label_encoder.classes_))
 
-# Save the trained model
-joblib.dump(best_model, "model/medi_guard_model.pkl")
+print("Confusion Matrix:")
+print(confusion_matrix(y_test, pred))
 
-print("Training complete.")
+# ----------------------------------------------------
+# 6. CROSS VALIDATION
+# ----------------------------------------------------
+print("\nRunning 5-Fold Cross-Validation...")
+cv_scores = cross_val_score(model, X, y_encoded, cv=5, scoring="accuracy")
+
+print(f"\nCross-Validation Accuracy: {cv_scores.mean()*100:.2f}% (+/- {cv_scores.std()*200:.2f})")
+
+# ----------------------------------------------------
+# 7. SAVE MODEL
+# ----------------------------------------------------
+print("\n[4] Saving model and label encoder...")
+
+joblib.dump(model, "model/medi_guard_merged_model.pkl")
+joblib.dump(label_encoder, "model/label_encoder.pkl")
+
+print("\n===================================================")
+print("           MODEL SAVED SUCCESSFULLY!")
+print("===================================================\n")

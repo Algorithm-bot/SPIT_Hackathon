@@ -1,47 +1,78 @@
 import pandas as pd
 import joblib
-import json
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+import warnings
+warnings.filterwarnings("ignore")
 
-# Load test dataset
+print("===================================================")
+print("            MEDI-GUARD PREDICTION MODULE           ")
+print("===================================================\n")
+
+# ----------------------------------------------------
+# 1. LOAD TEST DATA
+# ----------------------------------------------------
 test_df = pd.read_csv("data/test.csv")
 
-# Load model
-model = joblib.load("model/medi_guard_model.pkl")
-
-# Load min/max scaler (if needed)
-scaler = json.load(open("model/scaler.json"))
-
-train_min = scaler["min"]
-train_max = scaler["max"]
-
-
-# Remove Disease column if present
+# Check if true labels exist
+true_labels = None
 if "Disease" in test_df.columns:
-    test_df = test_df.drop("Disease", axis=1)
+    print("True labels found. Running evaluation mode...\n")
+    true_labels = test_df["Disease"].copy()
+    X_test = test_df.drop("Disease", axis=1)
+else:
+    print("No true labels found. Running prediction-only mode...\n")
+    X_test = test_df.copy()
 
-    
-# Function to scale manually like during training
-def scale_row(row):
-    scaled = {}
-    for col in row.index:
-        min_val = train_min[col]
-        max_val = train_max[col]
-        # Apply safe scaling: 0–1 range
-        scaled[col] = (row[col] - min_val) / (max_val - min_val)
-    return scaled
+# ----------------------------------------------------
+# 2. LOAD TRAINED MODEL + LABEL ENCODER
+# ----------------------------------------------------
+print("Loading model and label encoder...")
 
-# Scale entire test set
-scaled_test = test_df.apply(scale_row, axis=1, result_type="expand")
+model = joblib.load("model/medi_guard_merged_model.pkl")
+label_encoder = joblib.load("model/label_encoder.pkl")
 
-# Predict
-predictions = model.predict(scaled_test)
+print("Model loaded successfully!\n")
 
-# Add predictions to test_df
-test_df["Predicted_Disease"] = predictions
+# ----------------------------------------------------
+# 3. PREDICT
+# ----------------------------------------------------
+print("Generating predictions...\n")
 
-# Save results
+pred_encoded = model.predict(X_test)
+pred_labels = label_encoder.inverse_transform(pred_encoded)
+
+# Append predictions to DataFrame
+result_df = test_df.copy()
+result_df["Predicted_Disease"] = pred_labels
+
+# ----------------------------------------------------
+# 4. EVALUATE (ONLY IF TRUE LABELS EXIST)
+# ----------------------------------------------------
+if true_labels is not None:
+    print("================ MODEL EVALUATION ================\n")
+
+    acc = accuracy_score(true_labels, pred_labels)
+    print(f"🎯 Accuracy: {acc*100:.2f}%\n")
+
+    print("Classification Report:")
+    print(classification_report(true_labels, pred_labels))
+
+    print("Confusion Matrix:")
+    print(confusion_matrix(true_labels, pred_labels))
+
+    correct = sum(true_labels == pred_labels)
+    incorrect = len(pred_labels) - correct
+    print(f"\nCorrect: {correct}  |  Incorrect: {incorrect}\n")
+
+# ----------------------------------------------------
+# 5. SAVE OUTPUT
+# ----------------------------------------------------
 output_path = "test_predictions.csv"
-test_df.to_csv(output_path, index=False)
+result_df.to_csv(output_path, index=False)
 
-print(f"Prediction completed! Saved to {output_path}")
-print(test_df.head())
+print("===================================================")
+print(f"Prediction saved to: {output_path}")
+print("===================================================\n")
+
+print("First 5 predictions:")
+print(result_df.head())
