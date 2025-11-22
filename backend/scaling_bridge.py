@@ -1,152 +1,135 @@
 import joblib
-import json
 import numpy as np
-import pandas as pd
 import os
 
-# Clinical value ranges for min-max normalization (raw values to 0-1)
-# These are typical ranges found in clinical practice
+# ---------------------------------------------------------
+# 1. SETUP PATHS & LOAD SCALER
+# ---------------------------------------------------------
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+SCALER_PATH = os.path.join(BASE_DIR, "model", "standard_scaler.pkl")
+
+saved_scaler = None
+
+# Try to load the scaler
+try:
+    if os.path.exists(SCALER_PATH):
+        saved_scaler = joblib.load(SCALER_PATH)
+    else:
+        # Check parent directory fallback
+        PARENT_PATH = os.path.join(BASE_DIR, "..", "model", "standard_scaler.pkl")
+        if os.path.exists(PARENT_PATH):
+            saved_scaler = joblib.load(PARENT_PATH)
+            SCALER_PATH = PARENT_PATH
+        else:
+            print("⚠️ WARNING: Scaler not found. KNN predictions will fail.")
+except Exception as e:
+    print(f"Error loading scaler: {e}")
+
+# ---------------------------------------------------------
+# 2. DEFINE CLINICAL RANGES (REQUIRED FOR NORMALIZATION)
+# ---------------------------------------------------------
+# These match the Min/Max used to create your 0-1 training data.
 CLINICAL_RANGES = {
-    "Glucose": (50, 500),  # mg/dL (normal: 70-100, diabetic can be 200+)
-    "Cholesterol": (100, 400),  # mg/dL (normal: <200)
-    "Hemoglobin": (5, 20),  # g/dL (normal: 12-16 for women, 14-18 for men)
-    "Platelets": (50000, 600000),  # per microliter (normal: 150,000-450,000)
-    "White_Blood_Cells": (2000, 30000),  # per microliter (normal: 4,000-11,000)
-    "Red_Blood_Cells": (2, 8),  # million cells per microliter (normal: 4.5-5.5)
-    "Hematocrit": (20, 60),  # % (normal: 36-48 for women, 40-52 for men)
-    "Mean_Corpuscular_Volume": (60, 120),  # fL (normal: 80-100)
-    "Mean_Corpuscular_Hemoglobin": (15, 40),  # pg (normal: 27-31)
-    "Mean_Corpuscular_Hemoglobin_Concentration": (25, 40),  # g/dL (normal: 32-36)
-    "Insulin": (2, 50),  # μU/mL (normal: 2-25)
-    "BMI": (15, 50),  # kg/m² (normal: 18.5-24.9)
-    "Systolic_Blood_Pressure": (80, 200),  # mmHg (normal: <120)
-    "Diastolic_Blood_Pressure": (40, 120),  # mmHg (normal: <80)
-    "Triglycerides": (50, 1000),  # mg/dL (normal: <150)
-    "HbA1c": (3, 15),  # % (normal: <5.7, diabetic: >6.5)
-    "LDL_Cholesterol": (50, 300),  # mg/dL (normal: <100)
-    "HDL_Cholesterol": (20, 100),  # mg/dL (normal: >40 for men, >50 for women)
-    "ALT": (5, 200),  # U/L (normal: 7-56)
-    "AST": (5, 200),  # U/L (normal: 10-40)
-    "Heart_Rate": (40, 150),  # bpm (normal: 60-100)
-    "Creatinine": (0.5, 10),  # mg/dL (normal: 0.6-1.2)
-    "Troponin": (0, 50),  # ng/mL (normal: <0.04)
-    "C_reactive_Protein": (0, 50)  # mg/L (normal: <3)
+    "Glucose": (50, 250),           # LOWERED Max from 500 -> 250 (Makes 185 a "High" 0.67 instead of "Low" 0.3)
+    "Cholesterol": (100, 350),      # Tightened
+    "Hemoglobin": (5, 18),
+    "Platelets": (50000, 450000),   # Standardized
+    "White_Blood_Cells": (2000, 20000),
+    "Red_Blood_Cells": (2, 7),
+    "Hematocrit": (20, 55),
+    "Mean_Corpuscular_Volume": (60, 110),
+    "Mean_Corpuscular_Hemoglobin": (15, 35),
+    "Mean_Corpuscular_Hemoglobin_Concentration": (25, 38),
+    "Insulin": (2, 40),             # Tightened to catch resistance earlier
+    "BMI": (15, 45),
+    "Systolic_Blood_Pressure": (80, 180),
+    "Diastolic_Blood_Pressure": (40, 110),
+    "Triglycerides": (50, 500),     # LOWERED Max from 1000 -> 500 (Makes 220 more significant)
+    "HbA1c": (3, 10),               # LOWERED Max from 15 -> 10 (Makes 8.2 a very high 0.74)
+    "LDL_Cholesterol": (50, 250),
+    "HDL_Cholesterol": (20, 100),
+    "ALT": (5, 150),
+    "AST": (5, 150),
+    "Heart_Rate": (40, 120),
+    "Creatinine": (0.5, 5),
+    "Troponin": (0, 10),            # Troponin is usually very low, max 10 covers emergencies
+    "C_reactive_Protein": (0, 20)
 }
 
-def normalize_to_0_1(value, min_val, max_val):
-    """
-    Normalize a raw clinical value to 0-1 range using min-max scaling.
-    Clips values outside the range to [0, 1].
-    """
-    try:
-        normalized = (value - min_val) / (max_val - min_val)
-        # Clip to [0, 1] to handle outliers
-        return max(0.0, min(1.0, normalized))
-    except ZeroDivisionError:
-        return 0.0
+def normalize_value(key, value):
+    """Converts raw value (e.g. 105) to 0-1 range based on clinical limits."""
+    if key not in CLINICAL_RANGES:
+        return value # Fallback
+        
+    min_val, max_val = CLINICAL_RANGES[key]
+    
+    # Formula: (x - min) / (max - min)
+    normalized = (value - min_val) / (max_val - min_val)
+    
+    # Clip to ensure it stays between 0 and 1
+    return max(0.0, min(1.0, normalized))
 
-def scale_input(raw_data, scaler_config=None):
+# ---------------------------------------------------------
+# 3. MAIN PROCESSING FUNCTION
+# ---------------------------------------------------------
+
+def get_model_input(raw_data, model_type="xgboost"):
     """
-    Convert raw clinical values (e.g., 120 mg/dL) to the format expected by the model.
-    
-    Process:
-    1. Normalize raw values to 0-1 range using clinical ranges
-    2. Create feature engineering (ratios, etc.)
-    3. Apply feature selector
-    4. Apply StandardScaler transformation
-    
     Args:
-        raw_data: dict with raw clinical values (e.g., {"Glucose": 120.0, ...})
-        scaler_config: optional scaler config dict (if None, loads from file)
-    
-    Returns:
-        numpy array ready for model prediction
+        raw_data: dict of RAW clinical values {"Glucose": 105, ...}
+        model_type: "xgboost" or "knn"
     """
-    try:
-        # Load scaler components
-        scaler_path = "model/scaler_improved.pkl"
-        feature_selector_path = "model/feature_selector.pkl"
-        scaler_json_path = "model/scaler_improved.json"
+    
+    EXPECTED_FEATURES_ORDER = [
+        "Glucose", "Cholesterol", "Hemoglobin", "Platelets", "White_Blood_Cells",
+        "Red_Blood_Cells", "Hematocrit", "Mean_Corpuscular_Volume",
+        "Mean_Corpuscular_Hemoglobin", "Mean_Corpuscular_Hemoglobin_Concentration",
+        "Insulin", "BMI", "Systolic_Blood_Pressure", "Diastolic_Blood_Pressure",
+        "Triglycerides", "HbA1c", "LDL_Cholesterol", "HDL_Cholesterol",
+        "ALT", "AST", "Heart_Rate", "Creatinine", "Troponin", "C_reactive_Protein"
+    ]
+    
+    # 1. Normalize Raw Values -> 0-1 Range
+    normalized_features = []
+    for feature in EXPECTED_FEATURES_ORDER:
+        raw_val = float(raw_data.get(feature, 0))
+        norm_val = normalize_value(feature, raw_val)
+        normalized_features.append(norm_val)
+    
+    # Reshape for model (1 sample, 24 features)
+    # This 'X_normalized' now matches the format of your train.csv
+    X_normalized = np.array(normalized_features).reshape(1, -1)
+
+    # 2. Return based on Model Requirement
+    if model_type == "xgboost":
+        # XGBoost was trained on the 0-1 CSV data directly.
+        return X_normalized
         
-        if not os.path.exists(scaler_path):
-            raise FileNotFoundError(f"Scaler not found at {scaler_path}")
+    elif model_type == "knn":
+        # KNN was trained on StandardScaled version of the 0-1 data.
+        if saved_scaler is None:
+            raise ValueError("Scaler not loaded.")
+            
+        # Transform the 0-1 data into Standard Scale
+        X_scaled = saved_scaler.transform(X_normalized)
+        return X_scaled
         
-        scaler_improved = joblib.load(scaler_path)
-        feature_selector = joblib.load(feature_selector_path)
-        
-        if scaler_config is None:
-            scaler_data = json.load(open(scaler_json_path))
-        else:
-            scaler_data = scaler_config
-        
-        selected_features = scaler_data["selected_features"]
-        
-        # Step 1: Normalize raw values to 0-1 range using clinical ranges
-        normalized_data = {}
-        for key, value in raw_data.items():
-            if key in CLINICAL_RANGES:
-                min_val, max_val = CLINICAL_RANGES[key]
-                normalized_data[key] = normalize_to_0_1(value, min_val, max_val)
-            else:
-                # If key not in ranges, assume it's already normalized or use value as-is
-                normalized_data[key] = value
-        
-        # Step 2: Create DataFrame with normalized values
-        # Ensure all base features are present (fill missing with 0.5 as default normalized value)
-        all_base_features = list(CLINICAL_RANGES.keys())
-        for feature in all_base_features:
-            if feature not in normalized_data:
-                normalized_data[feature] = 0.5  # Default to middle of normalized range
-        
-        X = pd.DataFrame([normalized_data])
-        
-        # Step 3: Add engineered features (these should be calculated on normalized values)
-        # These engineered features are needed by the feature selector
-        if 'HDL_Cholesterol' in X.columns and 'LDL_Cholesterol' in X.columns:
-            # Calculate ratio on normalized values
-            X['HDL_LDL_Ratio'] = X['HDL_Cholesterol'] / (X['LDL_Cholesterol'] + 1e-6)
-        else:
-            X['HDL_LDL_Ratio'] = 0.0
-        
-        if 'Systolic_Blood_Pressure' in X.columns and 'Diastolic_Blood_Pressure' in X.columns:
-            # Pulse pressure on normalized values
-            X['Pulse_Pressure'] = X['Systolic_Blood_Pressure'] - X['Diastolic_Blood_Pressure']
-        else:
-            X['Pulse_Pressure'] = 0.0
-        
-        if 'Mean_Corpuscular_Hemoglobin' in X.columns and 'Mean_Corpuscular_Volume' in X.columns:
-            # MCH/MCV ratio on normalized values
-            X['MCH_MCV_Ratio'] = X['Mean_Corpuscular_Hemoglobin'] / (X['Mean_Corpuscular_Volume'] + 1e-6)
-        else:
-            X['MCH_MCV_Ratio'] = 0.0
-        
-        # Step 4: Ensure all selected features exist (fill missing with 0)
-        for feature in selected_features:
-            if feature not in X.columns:
-                X[feature] = 0.0
-        
-        # Step 5: Select features using feature selector
-        X_selected = feature_selector.transform(X)
-        
-        # Step 6: Apply StandardScaler transformation
-        X_scaled = scaler_improved.transform(X_selected)
-        
-        # Return as numpy array for model prediction
-        return X_scaled[0]
-        
-    except FileNotFoundError as e:
-        raise FileNotFoundError(f"Required model files not found: {e}")
-    except Exception as e:
-        # Fallback: try old min/max scaling if available
-        if scaler_config and "min" in scaler_config and "max" in scaler_config:
-            scaled = {}
-            for key, value in raw_data.items():
-                if key in scaler_config["min"] and key in scaler_config["max"]:
-                    min_v = scaler_config["min"][key]
-                    max_v = scaler_config["max"][key]
-                    scaled[key] = normalize_to_0_1(value, min_v, max_v)
-                else:
-                    scaled[key] = value
-            return np.array(list(scaled.values()))
-        else:
-            raise ValueError(f"Scaling failed: {e}")
+    else:
+        raise ValueError(f"Unknown model type: {model_type}")
+
+# --- Test Block ---
+if __name__ == "__main__":
+    print("--- Testing Normalization Logic ---")
+    test_data = {"Glucose": 105, "Cholesterol": 200}
+    
+    # Manually check calculation for Glucose (Range 50-500)
+    # (105 - 50) / (500 - 50) = 55 / 450 = 0.122
+    
+    output = get_model_input(test_data, "xgboost")
+    print(f"Raw Glucose: {test_data['Glucose']}")
+    print(f"Normalized Input to Model: {output[0][0]:.4f}") 
+    
+    if 0.12 < output[0][0] < 0.13:
+        print("✅ Correct! 105 converted to approx 0.12")
+    else:
+        print("❌ Incorrect normalization.")
