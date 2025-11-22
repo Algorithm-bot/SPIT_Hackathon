@@ -1,4 +1,37 @@
 import React, { useState } from "react";
+import toast, { Toaster } from "react-hot-toast";
+
+// --- Constants (Data & Ranges) ---
+const REALISTIC_RANGES = {
+  glucose: { min: 30, max: 800, unit: "mg/dL" },
+  cholesterol: { min: 50, max: 800, unit: "mg/dL" },
+  hemoglobin: { min: 3, max: 25, unit: "g/dL" },
+  platelets: { min: 10000, max: 1500000, unit: "cells/µL" },
+  "white blood cells": { min: 500, max: 50000, unit: "cells/µL" },
+  "red blood cells": { min: 1, max: 8, unit: "M/µL" },
+  Hematocrit: { min: 10, max: 65, unit: "%" },
+  "Mean Corpuscular Volume": { min: 50, max: 150, unit: "fL" },
+  "Mean Corpuscular Hemoglobin": { min: 10, max: 50, unit: "pg" },
+  "Mean Corpuscular Hemoglobin Concentration": {
+    min: 20,
+    max: 45,
+    unit: "g/dL",
+  },
+  Insulin: { min: 1, max: 200, unit: "µIU/mL" },
+  BMI: { min: 10, max: 70, unit: "kg/m²" },
+  "Systolic Blood Pressure": { min: 50, max: 300, unit: "mmHg" },
+  "Diastolic Blood Pressure": { min: 30, max: 200, unit: "mmHg" },
+  Triglycerides: { min: 10, max: 2000, unit: "mg/dL" },
+  HbA1c: { min: 3, max: 20, unit: "%" },
+  "LDL Cholesterol": { min: 0, max: 600, unit: "mg/dL" },
+  "HDL Cholesterol": { min: 5, max: 200, unit: "mg/dL" },
+  ALT: { min: 1, max: 1000, unit: "U/L" },
+  AST: { min: 1, max: 1000, unit: "U/L" },
+  "Heart Rate": { min: 30, max: 250, unit: "beats/min" },
+  Creatinine: { min: 0.1, max: 20, unit: "mg/dL" },
+  Troponin: { min: 0, max: 500, unit: "ng/L" },
+  "C-reactive Protein": { min: 0, max: 500, unit: "mg/L" },
+};
 
 const fieldNames = [
   "glucose",
@@ -25,20 +58,30 @@ const fieldNames = [
   "Creatinine",
   "Troponin",
   "C-reactive Protein",
-]; // Total: 24 fields
+];
 
 const createInitialState = () =>
   fieldNames.reduce((acc, name) => ({ ...acc, [name]: "" }), {});
 
-function ReportForm({ onReportSubmit }) {
+// Helper function to format field labels
+const formatLabel = (name) =>
+  name
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+
+// --- ReportForm Component ---
+
+function ReportForm() {
+  // Removed onReportSubmit prop
   const [formData, setFormData] = useState(createInitialState());
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Handles input change and basic numeric validation
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    // Numeric-only validation: allow empty, digits, and single decimal
     if (value !== "" && !/^\d*\.?\d*$/.test(value)) {
       setErrors((prev) => ({ ...prev, [name]: "Must be a numeric value." }));
     } else {
@@ -47,22 +90,45 @@ function ReportForm({ onReportSubmit }) {
     setFormData({ ...formData, [name]: value });
   };
 
+  // Validates mandatory fields and checks against realistic ranges
   const validate = () => {
     let newErrors = {};
     let isValid = true;
+    let firstErrorMsg = "";
 
     for (const key of fieldNames) {
-      // Mandatory and numeric validation
-      if (formData[key].trim() === "") {
-        newErrors[key] = "This field is mandatory.";
+      const value = formData[key].trim();
+      const numValue = parseFloat(value);
+      const range = REALISTIC_RANGES[key];
+
+      // 1. Mandatory and Numeric Validation
+      if (value === "" || !/^\d*\.?\d+$/.test(value)) {
+        newErrors[key] = "Required and must be numeric.";
         isValid = false;
-      } else if (!/^\d*\.?\d+$/.test(formData[key])) {
-        newErrors[key] = "Must be a valid numeric value.";
+        if (!firstErrorMsg)
+          firstErrorMsg = `"${formatLabel(
+            key
+          )}" is mandatory or not a valid number.`;
+      }
+      // 2. Realistic Range Check
+      else if (range && (numValue < range.min || numValue > range.max)) {
+        newErrors[
+          key
+        ] = `Value outside range (${range.min} - ${range.max} ${range.unit}).`;
         isValid = false;
+        if (!firstErrorMsg)
+          firstErrorMsg = `"${formatLabel(
+            key
+          )}" is outside the realistic range.`;
       }
     }
 
     setErrors(newErrors);
+
+    if (!isValid) {
+      toast.error(`Validation Failed: ${firstErrorMsg}`, { duration: 4000 });
+    }
+
     return isValid;
   };
 
@@ -71,34 +137,34 @@ function ReportForm({ onReportSubmit }) {
     if (validate()) {
       setIsSubmitting(true);
 
-      const reportJson = {
+      const newReport = {
         id: Date.now(),
         timestamp: new Date().toISOString(),
         ...formData,
       };
 
-      console.log("--- JSON Report Generated (for Backend): ---");
-      console.log(JSON.stringify(reportJson, null, 2));
-      console.log("---------------------------------------------");
+      console.log("--- JSON Report Generated (for Backend): ---", newReport);
 
+      // Simulate Backend Call and Storage
       setTimeout(() => {
-        onReportSubmit(reportJson); // Send data to App.jsx for history storage
-        alert("Data submitted successfully! Navigate to History.");
+        // 🔑 1. FETCH existing history from localStorage
+        const existingReports =
+          JSON.parse(localStorage.getItem("report_history")) || [];
+
+        // 🔑 2. CREATE the updated list (new report first)
+        const updatedReports = [newReport, ...existingReports];
+
+        // 🔑 3. STORE the updated list back into localStorage
+        localStorage.setItem("report_history", JSON.stringify(updatedReports));
+
+        toast.success("Report submitted successfully and saved to history!", {
+          duration: 3000,
+        });
         setIsSubmitting(false);
         setFormData(createInitialState());
       }, 1500);
-    } else {
-      alert(
-        "Please correct the mandatory fields and ensure all values are numeric."
-      );
     }
   };
-
-  const formatLabel = (name) =>
-    name
-      .split(" ")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ");
 
   return (
     <div
@@ -111,9 +177,12 @@ function ReportForm({ onReportSubmit }) {
         boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
       }}
     >
-      <h2>Patient Report Data Entry</h2>
+      <Toaster position="top-right" reverseOrder={false} />
+
+      <h2>🔬 Patient Report Data Entry</h2>
       <p style={{ color: "#0047AB", fontWeight: "bold" }}>
-        All 24 fields are mandatory and must contain only numeric values.
+        All 24 fields are mandatory and must contain only numeric values within
+        a realistic clinical range.
       </p>
 
       <form
@@ -134,7 +203,7 @@ function ReportForm({ onReportSubmit }) {
               name={name}
               value={formData[name]}
               onChange={handleChange}
-              placeholder={`Enter value for ${name}`}
+              placeholder={`Range: ${REALISTIC_RANGES[name].min} - ${REALISTIC_RANGES[name].max} ${REALISTIC_RANGES[name].unit}`}
               required
               style={{
                 padding: "8px",
