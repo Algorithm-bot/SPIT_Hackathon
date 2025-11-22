@@ -70,6 +70,46 @@ const formatLabel = (name) =>
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
 
+// Map frontend field names to backend API field names
+const mapToBackendFormat = (frontendData) => {
+  const fieldMapping = {
+    "glucose": "Glucose",
+    "cholesterol": "Cholesterol",
+    "hemoglobin": "Hemoglobin",
+    "platelets": "Platelets",
+    "white blood cells": "White_Blood_Cells",
+    "red blood cells": "Red_Blood_Cells",
+    "Hematocrit": "Hematocrit",
+    "Mean Corpuscular Volume": "Mean_Corpuscular_Volume",
+    "Mean Corpuscular Hemoglobin": "Mean_Corpuscular_Hemoglobin",
+    "Mean Corpuscular Hemoglobin Concentration": "Mean_Corpuscular_Hemoglobin_Concentration",
+    "Insulin": "Insulin",
+    "BMI": "BMI",
+    "Systolic Blood Pressure": "Systolic_Blood_Pressure",
+    "Diastolic Blood Pressure": "Diastolic_Blood_Pressure",
+    "Triglycerides": "Triglycerides",
+    "HbA1c": "HbA1c",
+    "LDL Cholesterol": "LDL_Cholesterol",
+    "HDL Cholesterol": "HDL_Cholesterol",
+    "ALT": "ALT",
+    "AST": "AST",
+    "Heart Rate": "Heart_Rate",
+    "Creatinine": "Creatinine",
+    "Troponin": "Troponin",
+    "C-reactive Protein": "C_reactive_Protein",
+  };
+
+  const backendData = {};
+  for (const [frontendKey, value] of Object.entries(frontendData)) {
+    const backendKey = fieldMapping[frontendKey];
+    if (backendKey) {
+      // Convert string value to float
+      backendData[backendKey] = parseFloat(value);
+    }
+  }
+  return backendData;
+};
+
 // --- ReportForm Component ---
 
 function ReportForm() {
@@ -132,7 +172,7 @@ function ReportForm() {
     return isValid;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (validate()) {
       setIsSubmitting(true);
@@ -145,24 +185,60 @@ function ReportForm() {
 
       console.log("--- JSON Report Generated (for Backend): ---", newReport);
 
-      // Simulate Backend Call and Storage
-      setTimeout(() => {
-        // 🔑 1. FETCH existing history from localStorage
-        const existingReports =
-          JSON.parse(localStorage.getItem("report_history")) || [];
+      try {
+        // Map frontend field names to backend format
+        const backendData = mapToBackendFormat(formData);
+        console.log("--- Mapped to Backend Format: ---", backendData);
 
-        // 🔑 2. CREATE the updated list (new report first)
-        const updatedReports = [newReport, ...existingReports];
-
-        // 🔑 3. STORE the updated list back into localStorage
-        localStorage.setItem("report_history", JSON.stringify(updatedReports));
-
-        toast.success("Report submitted successfully and saved to history!", {
-          duration: 3000,
+        // Call backend API
+        const API_URL = "http://localhost:8000/predict";
+        
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(backendData),
         });
+
+        const result = await response.json();
+
+        if (result.status === "success") {
+          // Add prediction result to report
+          newReport.prediction = result.prediction;
+          newReport.probabilities = result.probabilities;
+          newReport.blockchain_entry = result.blockchain_entry;
+
+          // Save to localStorage
+          const existingReports =
+            JSON.parse(localStorage.getItem("report_history")) || [];
+          const updatedReports = [newReport, ...existingReports];
+          localStorage.setItem("report_history", JSON.stringify(updatedReports));
+
+          toast.success(
+            `Report submitted! Predicted Disease: ${result.prediction}`,
+            { duration: 5000 }
+          );
+          
+          console.log("✅ Prediction Result:", result);
+        } else {
+          // Handle errors from backend
+          const errorMsg = result.errors 
+            ? result.errors.join(", ") 
+            : result.message || "Unknown error";
+          toast.error(`Prediction failed: ${errorMsg}`, { duration: 5000 });
+          console.error("❌ Prediction Error:", result);
+        }
+      } catch (error) {
+        console.error("❌ Network Error:", error);
+        toast.error(
+          `Failed to connect to backend. Make sure the server is running on http://localhost:8000`,
+          { duration: 5000 }
+        );
+      } finally {
         setIsSubmitting(false);
         setFormData(createInitialState());
-      }, 1500);
+      }
     }
   };
 
