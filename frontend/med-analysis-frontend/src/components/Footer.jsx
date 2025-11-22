@@ -4,18 +4,25 @@ export default function Footer() {
   return (
     <footer
       style={{
-        background: "#3A8DFF",
+        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
         color: "#fff",
-        marginTop: 48,
+        marginTop: 80,
         textAlign: "center",
-        padding: "18px 0 12px",
-        fontSize: ".97rem",
-        letterSpacing: ".02em",
-        borderTopLeftRadius: 16,
-        borderTopRightRadius: 16,
+        padding: "30px 0 20px",
+        fontSize: "1rem",
+        letterSpacing: ".03em",
+        borderTopLeftRadius: 30,
+        borderTopRightRadius: 30,
+        boxShadow: "0 -4px 20px rgba(0,0,0,0.1)",
+        width: "100%",
       }}
     >
-      &copy; {new Date().getFullYear()} Med Predict AI. All rights reserved.
+      <div style={{ fontWeight: 600, marginBottom: "8px" }}>
+        &copy; {new Date().getFullYear()} Med Predict AI
+      </div>
+      <div style={{ fontSize: "0.9rem", opacity: 0.9 }}>
+        All rights reserved. Team Vibe Coders
+      </div>
     </footer>
   );
 }

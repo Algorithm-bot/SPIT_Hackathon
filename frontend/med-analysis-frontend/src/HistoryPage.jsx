@@ -27,15 +27,26 @@ const HistoryPage = ({ reports }) => {
   return (
     <div
       style={{
-        maxWidth: "1000px",
-        margin: "30px auto",
-        padding: "20px",
-        backgroundColor: "white",
-        borderRadius: "8px",
-        boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+        maxWidth: "1200px",
+        margin: "40px auto",
+        padding: "40px",
+        background: "rgba(255,255,255,0.95)",
+        backdropFilter: "blur(10px)",
+        borderRadius: "24px",
+        boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
+        border: "1px solid rgba(255,255,255,0.5)",
       }}
     >
-      <h2>📋 Report Submission History</h2>
+      <h2 style={{
+        fontSize: "2.2rem",
+        fontWeight: 800,
+        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+        WebkitBackgroundClip: "text",
+        WebkitTextFillColor: "transparent",
+        marginBottom: "30px",
+      }}>
+        📋 Report Submission History
+      </h2>
       <div style={{ overflowX: "auto" }}>
         <table
           style={{
@@ -46,18 +57,21 @@ const HistoryPage = ({ reports }) => {
           }}
         >
           <thead>
-            <tr style={{ backgroundColor: "#ADD8E6" }}>
-              <th style={{ padding: "10px", border: "1px solid #ccc" }}>ID</th>
-              <th style={{ padding: "10px", border: "1px solid #ccc" }}>
+            <tr style={{ 
+              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+              color: "#fff",
+            }}>
+              <th style={{ padding: "15px", border: "1px solid rgba(255,255,255,0.2)", fontWeight: 600 }}>ID</th>
+              <th style={{ padding: "15px", border: "1px solid rgba(255,255,255,0.2)", fontWeight: 600 }}>
                 Date
               </th>
-              <th style={{ padding: "10px", border: "1px solid #ccc" }}>
+              <th style={{ padding: "15px", border: "1px solid rgba(255,255,255,0.2)", fontWeight: 600 }}>
                 Patient ID
               </th>
-              <th style={{ padding: "10px", border: "1px solid #ccc" }}>
+              <th style={{ padding: "15px", border: "1px solid rgba(255,255,255,0.2)", fontWeight: 600 }}>
                 Prediction
               </th>
-              <th style={{ padding: "10px", border: "1px solid #ccc" }}>
+              <th style={{ padding: "15px", border: "1px solid rgba(255,255,255,0.2)", fontWeight: 600 }}>
                 Triage
               </th>
               {displayKeys.map((key) => (
@@ -72,8 +86,8 @@ const HistoryPage = ({ reports }) => {
                   {key}
                 </th>
               ))}
-              <th style={{ padding: "10px", border: "1px solid #ccc" }}>Blockchain</th>
-              <th style={{ padding: "10px", border: "1px solid #ccc" }}>Actions</th>
+              <th style={{ padding: "15px", border: "1px solid rgba(255,255,255,0.2)", fontWeight: 600 }}>Blockchain</th>
+              <th style={{ padding: "15px", border: "1px solid rgba(255,255,255,0.2)", fontWeight: 600 }}>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -145,16 +159,31 @@ const HistoryPage = ({ reports }) => {
                         )
                       }
                       style={{
-                        padding: "5px 10px",
-                        backgroundColor: expandedReport === report.id ? "#6c757d" : "#007ACC",
+                        padding: "8px 16px",
+                        background: expandedReport === report.id 
+                          ? "linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%)"
+                          : "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
                         color: "white",
                         border: "none",
-                        borderRadius: "4px",
+                        borderRadius: "20px",
                         cursor: "pointer",
-                        fontSize: "0.85em",
+                        fontSize: "0.9em",
+                        fontWeight: 600,
+                        transition: "all 0.3s ease",
+                        boxShadow: "0 4px 15px rgba(102, 126, 234, 0.3)",
+                      }}
+                      onMouseEnter={(e) => {
+                        if (expandedReport !== report.id) {
+                          e.currentTarget.style.transform = "translateY(-2px)";
+                          e.currentTarget.style.boxShadow = "0 6px 20px rgba(102, 126, 234, 0.4)";
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = "translateY(0)";
+                        e.currentTarget.style.boxShadow = "0 4px 15px rgba(102, 126, 234, 0.3)";
                       }}
                     >
-                      {expandedReport === report.id ? "Hide" : "Show"} Details
+                      {expandedReport === report.id ? " Hide Details" : " Show Details"}
                     </button>
                   </td>
                 </tr>

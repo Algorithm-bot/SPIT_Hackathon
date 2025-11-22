@@ -257,21 +257,38 @@ function ReportForm() {
   return (
     <div
       style={{
-        maxWidth: "800px",
-        margin: "30px auto",
-        padding: "20px",
-        backgroundColor: "white",
-        borderRadius: "8px",
-        boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+        maxWidth: "900px",
+        margin: "40px auto",
+        padding: "40px",
+        background: "rgba(255,255,255,0.95)",
+        backdropFilter: "blur(10px)",
+        borderRadius: "24px",
+        boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
+        border: "1px solid rgba(255,255,255,0.5)",
       }}
     >
       <Toaster position="top-right" reverseOrder={false} />
 
-      <h2>🔬 Patient Report Data Entry</h2>
-      <p style={{ color: "#0047AB", fontWeight: "bold" }}>
-        All 24 fields are mandatory and must contain only numeric values within
-        a realistic clinical range. A unique Patient ID will be automatically generated for each submission.
-      </p>
+      <div style={{ marginBottom: "30px" }}>
+        <h2 style={{ 
+          fontSize: "2.2rem",
+          fontWeight: 800,
+          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "transparent",
+          marginBottom: "12px",
+        }}>
+          🔬 Patient Report Data Entry
+        </h2>
+        <p style={{ 
+          color: "#4F6076", 
+          fontSize: "1.05rem",
+          lineHeight: "1.6",
+        }}>
+          All 24 fields are mandatory and must contain only numeric values within
+          a realistic clinical range. A unique Patient ID will be automatically generated for each submission.
+        </p>
+      </div>
 
       <form
         onSubmit={handleSubmit}
@@ -281,9 +298,14 @@ function ReportForm() {
           <div key={name} style={{ display: "flex", flexDirection: "column" }}>
             <label
               htmlFor={name}
-              style={{ marginBottom: "5px", fontWeight: "bold" }}
+              style={{ 
+                marginBottom: "8px", 
+                fontWeight: 600,
+                color: "#2C3E50",
+                fontSize: "0.95rem",
+              }}
             >
-              {formatLabel(name)}: <span style={{ color: "red" }}>*</span>
+              {formatLabel(name)}: <span style={{ color: "#e74c3c" }}>*</span>
             </label>
             <input
               type="text"
@@ -294,9 +316,24 @@ function ReportForm() {
               placeholder={`Range: ${REALISTIC_RANGES[name].min} - ${REALISTIC_RANGES[name].max} ${REALISTIC_RANGES[name].unit}`}
               required
               style={{
-                padding: "8px",
-                border: errors[name] ? "2px solid red" : "1px solid #ccc",
-                borderRadius: "4px",
+                padding: "12px 16px",
+                border: errors[name] ? "2px solid #e74c3c" : "2px solid #e0e0e0",
+                borderRadius: "12px",
+                fontSize: "1rem",
+                transition: "all 0.3s ease",
+                backgroundColor: "#fff",
+              }}
+              onFocus={(e) => {
+                if (!errors[name]) {
+                  e.currentTarget.style.borderColor = "#667eea";
+                  e.currentTarget.style.boxShadow = "0 0 0 3px rgba(102, 126, 234, 0.1)";
+                }
+              }}
+              onBlur={(e) => {
+                if (!errors[name]) {
+                  e.currentTarget.style.borderColor = "#e0e0e0";
+                  e.currentTarget.style.boxShadow = "none";
+                }
               }}
             />
             {errors[name] && (
@@ -314,17 +351,36 @@ function ReportForm() {
           disabled={isSubmitting}
           style={{
             gridColumn: "1 / -1",
-            marginTop: "20px",
-            padding: "15px",
-            backgroundColor: isSubmitting ? "#A0B0E0" : "#007ACC",
+            marginTop: "30px",
+            padding: "18px 32px",
+            background: isSubmitting 
+              ? "linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%)"
+              : "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
             color: "white",
             border: "none",
-            borderRadius: "5px",
+            borderRadius: "50px",
             cursor: isSubmitting ? "not-allowed" : "pointer",
-            fontSize: "1.1em",
+            fontSize: "1.15rem",
+            fontWeight: 700,
+            transition: "all 0.3s ease",
+            boxShadow: isSubmitting 
+              ? "0 4px 15px rgba(149, 165, 166, 0.3)"
+              : "0 6px 24px rgba(102, 126, 234, 0.4)",
+          }}
+          onMouseEnter={(e) => {
+            if (!isSubmitting) {
+              e.currentTarget.style.transform = "translateY(-2px)";
+              e.currentTarget.style.boxShadow = "0 8px 30px rgba(102, 126, 234, 0.5)";
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!isSubmitting) {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 6px 24px rgba(102, 126, 234, 0.4)";
+            }
           }}
         >
-          {isSubmitting ? "Analyzing..." : "Submit Report"}
+          {isSubmitting ? "⏳ Analyzing..." : "🚀 Submit Report"}
         </button>
       </form>
 
@@ -332,14 +388,23 @@ function ReportForm() {
       {lastResult && (
         <div
           style={{
-            marginTop: "30px",
-            padding: "20px",
-            backgroundColor: "#f9f9f9",
-            borderRadius: "8px",
-            border: "2px solid #007ACC",
+            marginTop: "40px",
+            padding: "30px",
+            background: "linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%)",
+            borderRadius: "20px",
+            border: "2px solid rgba(102, 126, 234, 0.2)",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
           }}
         >
-          <h3 style={{ marginTop: 0, color: "#0047AB" }}>
+          <h3 style={{ 
+            marginTop: 0, 
+            marginBottom: "20px",
+            fontSize: "1.8rem",
+            fontWeight: 800,
+            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+          }}>
             📊 Prediction Results
           </h3>
           
