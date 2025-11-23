@@ -1,5 +1,6 @@
 [
     {
+<<<<<<< HEAD
         "index": 0,
         "patient_id": "GENESIS",
         "prediction": "GENESIS_BLOCK",
@@ -298,5 +299,131 @@
         "previous_hash": "a1981084b9f8831789db5744a45086736e0668cb6d545f1af7aa5a9987f5d652",
         "nonce": 0,
         "hash": "c0099cd46f80685ec43dc060ba0ac573da7f238851124a2ffddef4a9f3dd05e1"
+=======
+        "patient_id": "patient_1234",
+        "prediction": "Anemia",
+        "timestamp": 1763825115.6497934,
+        "hash": "57deb7dc90db553119be0c612bdee61f77ae7d2d3dfc83eded1063f211c407b0"
+    },
+    {
+        "patient_id": "patient_1234",
+        "prediction": "Anemia",
+        "timestamp": 1763831956.48666,
+        "hash": "b4d130214d8ac51378f64c7f5a0b78debea9634b078cddff2d2b1d35c23618c1"
+    },
+    {
+        "patient_id": "patient_1234",
+        "prediction": "Healthy",
+        "timestamp": 1763833681.3043134,
+        "hash": "a3803f39a62e34b163f03e20b7c635a6bd665404796c6b4736ea74c7c8efcd44"
+    },
+    {
+        "patient_id": "patient_1234",
+        "prediction": "Anemia",
+        "timestamp": 1763834174.038721,
+        "hash": "c4eed9a751cd8b80eae9c9e84beb7c1d3eae3351edff5a1e1f8fa28e0ec8ef24"
+    },
+    {
+        "patient_id": "patient_1234",
+        "prediction": "Thalasse",
+        "timestamp": 1763834335.260751,
+        "hash": "c9ba35ad407d23f0b7f26ee0d5b0c1ac4d96f6c2d4aed0b34e5cc72bb86ef7a1"
+    },
+    {
+        "patient_id": "patient_1234",
+        "prediction": "Thalasse",
+        "timestamp": 1763834532.3209965,
+        "hash": "ba7a44c599bda78a1f9202b79ef0321d5a27ccada6186f68ad7e43931a32f2ba"
+    },
+    {
+        "patient_id": "patient_1234",
+        "prediction": "Thalasse",
+        "timestamp": 1763835025.766863,
+        "hash": "ab33a2195e801864ffed5891221820b39048956c35abae2f3ab83a67b32b6417"
+    },
+    {
+        "patient_id": "patient_1234",
+        "prediction": "Thalasse",
+        "timestamp": 1763835542.7533693,
+        "hash": "bad42c28373da7943d8a3c6d83ca4e8d982df60499fb4950a7b98156eef435a2"
+    },
+    {
+        "patient_id": "patient_1234",
+        "prediction": "Thalasse",
+        "timestamp": 1763835627.436096,
+        "hash": "dd9d72af91c5d90c9ade92481e8631f0fb2c2361d634235af4aabd1f39008156"
+    },
+    {
+        "patient_id": "patient_1234",
+        "prediction": "Anemia",
+        "timestamp": 1763835690.4324417,
+        "hash": "d60329bc6f46fd02c2c2a9aabc529c5cae7fd36fd54ade94dab8a0729fe4c257"
+    },
+    {
+        "patient_id": "patient_1234",
+        "prediction": "Thalasse",
+        "timestamp": 1763835762.1667395,
+        "hash": "a5ff1cee4cc56b7d96186239087588af5e9434186cfecb034c325db8c4088502"
+    },
+    {
+        "patient_id": "patient_1234",
+        "prediction": "Anemia",
+        "timestamp": 1763836398.9869723,
+        "hash": "50df4897e43840927e312012a33a1e4064fad2ae941fe9441bf468b89a8ac645"
+    },
+    {
+        "patient_id": "patient_1234",
+        "prediction": "Thalasse",
+        "timestamp": 1763836474.2870648,
+        "hash": "3aeae3c36563b7cadab2fb0d3390d7c487952571c5adf265c8a158b8a73944d8"
+    },
+    {
+        "patient_id": "patient_1234",
+        "prediction": "Diabetes",
+        "timestamp": 1763836717.7739491,
+        "hash": "0436057edba15d0768b4627cc672fd627b8ae0cd7c14f72ef08452006a61f88c"
+    },
+    {
+        "patient_id": "patient_1234",
+        "prediction": "Diabetes",
+        "timestamp": 1763836853.2190185,
+        "hash": "146a4fd5b678c32b91c9be82797f26a7c127847769d4c646b9e24548836084f6"
+    },
+    {
+        "patient_id": "patient_1234",
+        "prediction": "Anemia",
+        "timestamp": 1763836928.0550082,
+        "hash": "5ec8675cc5e4dfc939a0a6c9de18aaaa45caf16146076b69af859e09f18ed6e2"
+    },
+    {
+        "patient_id": "patient_1234",
+        "prediction": "Anemia",
+        "timestamp": 1763837037.6157184,
+        "hash": "220b82ba57ea7864cac4a97606913baf38fdd453a4327e94df849f937c4f8b48"
+    },
+    {
+        "patient_id": "patient_1234",
+        "prediction": "Anemia",
+        "timestamp": 1763837114.4099612,
+        "hash": "fa784da834c647646c4457da39154644dd9725e47f126d01ebcbe6f4f960839f"
+    },
+    {
+        "patient_id": "patient_1234",
+        "prediction": "Healthy",
+        "timestamp": 1763845306.0692058,
+        "hash": "31fe935c17d859245555a12ac1b9e2b8da875b6cf15e63ee0f391e2f9bebed8f"
+    },
+    {
+        "patient_id": "patient_1234",
+        "prediction": "Anemia",
+        "timestamp": 1763846986.399296,
+        "hash": "9d29f8f102778e1bc019b5d4ebdd190f01c00be56736086be36181fa1b5efb1c"
+    },
+    {
+        "patient_id": "patient_1234",
+        "prediction": "Thalasse",
+        "timestamp": 1763847589.6677313,
+        "hash": "5dc03a206f12d8d92e11d9e42943c4deda7ac53ef7ff7f73bd976c562a623898"
+>>>>>>> dev
     }
 ]
