@@ -55,10 +55,15 @@ export default function Header({ user, onLogout, onNavigate }) {
     <header
       style={{
         display: "flex",
-        background: "linear-gradient(90deg,#3A8DFF,#21C784)",
+        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
         padding: "20px 40px",
         alignItems: "center",
         justifyContent: "space-between",
+        boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+        position: "sticky",
+        top: 0,
+        zIndex: 1000,
+        backdropFilter: "blur(10px)",
       }}
     >
       <div
@@ -66,17 +71,46 @@ export default function Header({ user, onLogout, onNavigate }) {
         style={{
           cursor: "pointer",
           color: "#fff",
-          fontWeight: 700,
-          fontSize: "1.7rem",
+          fontWeight: 800,
+          fontSize: "1.8rem",
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+          transition: "transform 0.2s",
         }}
+        onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
+        onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
       >
-        Med Predict AI
+        <span style={{ fontSize: "1.5em" }}>🏥</span>
+        <span>Med Predict AI</span>
       </div>
-      <nav>
-        <button onClick={() => onNavigate("home")} style={navBtn}>
+      <nav style={{ display: "flex", gap: "10px" }}>
+        <button 
+          onClick={() => onNavigate("home")} 
+          style={navBtn}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "rgba(255,255,255,0.2)";
+            e.currentTarget.style.transform = "translateY(-2px)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "transparent";
+            e.currentTarget.style.transform = "translateY(0)";
+          }}
+        >
           Home
         </button>
-        <button onClick={() => onNavigate("form")} style={navBtn}>
+        <button 
+          onClick={() => onNavigate("form")} 
+          style={navBtn}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "rgba(255,255,255,0.2)";
+            e.currentTarget.style.transform = "translateY(-2px)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "transparent";
+            e.currentTarget.style.transform = "translateY(0)";
+          }}
+        >
           Submit Report
         </button>
       </nav>
@@ -87,7 +121,18 @@ export default function Header({ user, onLogout, onNavigate }) {
           onLogout={onLogout}
         />
       ) : (
-        <button style={loginBtn} onClick={() => onNavigate("login")}>
+        <button 
+          style={loginBtn} 
+          onClick={() => onNavigate("login")}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = "translateY(-2px)";
+            e.currentTarget.style.boxShadow = "0 6px 20px rgba(255,255,255,0.3)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = "translateY(0)";
+            e.currentTarget.style.boxShadow = "0 4px 15px rgba(255,255,255,0.2)";
+          }}
+        >
           Login
         </button>
       )}
@@ -99,20 +144,25 @@ const navBtn = {
   background: "transparent",
   color: "#fff",
   border: "none",
-  fontWeight: 500,
+  fontWeight: 600,
   fontSize: "1rem",
-  margin: "0 0.9rem",
-  padding: "8px 18px",
-  borderRadius: "18px",
+  padding: "10px 20px",
+  borderRadius: "25px",
   cursor: "pointer",
+  transition: "all 0.3s ease",
+  position: "relative",
+  overflow: "hidden",
 };
+
 const loginBtn = {
   background: "#fff",
-  color: "#3A8DFF",
-  fontWeight: 600,
+  color: "#667eea",
+  fontWeight: 700,
   border: "none",
-  borderRadius: "22px",
-  padding: "10px 28px",
-  fontSize: "1.1rem",
+  borderRadius: "25px",
+  padding: "12px 32px",
+  fontSize: "1.05rem",
   cursor: "pointer",
+  transition: "all 0.3s ease",
+  boxShadow: "0 4px 15px rgba(255,255,255,0.2)",
 };
