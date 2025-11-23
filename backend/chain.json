@@ -278,5 +278,25 @@
         "previous_hash": "e8a1b240e772bca4af95f01019889a8613af65e1c9503ea35044798394d8d9db",
         "nonce": 0,
         "hash": "ee20f76eeebc4d6597faeb2f6c3399c9beb5c76dce870348f42d90a4b8767b89"
+    },
+    {
+        "index": 28,
+        "patient_id": "PAT_74F6B7A3D7E8",
+        "prediction": "Thalasse",
+        "triage_level": "High",
+        "timestamp": 1763863681.6409469,
+        "previous_hash": "ee20f76eeebc4d6597faeb2f6c3399c9beb5c76dce870348f42d90a4b8767b89",
+        "nonce": 0,
+        "hash": "a1981084b9f8831789db5744a45086736e0668cb6d545f1af7aa5a9987f5d652"
+    },
+    {
+        "index": 29,
+        "patient_id": "PAT_BEFCF5F31DFE",
+        "prediction": "Healthy",
+        "triage_level": "Low",
+        "timestamp": 1763864669.1317313,
+        "previous_hash": "a1981084b9f8831789db5744a45086736e0668cb6d545f1af7aa5a9987f5d652",
+        "nonce": 0,
+        "hash": "c0099cd46f80685ec43dc060ba0ac573da7f238851124a2ffddef4a9f3dd05e1"
     }
 ]

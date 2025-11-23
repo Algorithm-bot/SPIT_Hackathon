@@ -6,6 +6,16 @@ const AuthModal = ({ type, onClose, setUser, onToggleType }) => {
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false); // 👁️ NEW
 
+  // Hash password using Web Crypto API (SHA-256)
+  const hashPassword = async (plainPassword) => {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(plainPassword);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+    return hashHex;
+  };
+
   const modalStyles = {
     overlay: {
       position: "fixed",
@@ -125,7 +135,7 @@ const AuthModal = ({ type, onClose, setUser, onToggleType }) => {
     return true;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateAuth()) return;
 
@@ -137,15 +147,37 @@ const AuthModal = ({ type, onClose, setUser, onToggleType }) => {
         return;
       }
 
-      users.push({ email, password });
+      // Hash password before storing
+      const hashedPassword = await hashPassword(password);
+      users.push({ email, password: hashedPassword });
       localStorage.setItem("med_users", JSON.stringify(users));
 
       alert("Signup successful! You can now log in.");
       onClose();
     } else if (type === "login") {
+      // Hash the entered password and compare with stored hash
+      const hashedPassword = await hashPassword(password);
       const foundUser = users.find(
-        (u) => u.email === email && u.password === password
+        (u) => u.email === email && u.password === hashedPassword
       );
+
+      // If not found, check for legacy plain text passwords (migration support)
+      if (!foundUser) {
+        const legacyUser = users.find(
+          (u) => u.email === email && u.password === password
+        );
+        
+        if (legacyUser) {
+          // Migrate legacy user to hashed password
+          legacyUser.password = hashedPassword;
+          localStorage.setItem("med_users", JSON.stringify(users));
+          localStorage.setItem("user", JSON.stringify({ email }));
+          setUser({ email });
+          alert("Login successful!");
+          onClose();
+          return;
+        }
+      }
 
       if (foundUser) {
         localStorage.setItem("user", JSON.stringify({ email }));
