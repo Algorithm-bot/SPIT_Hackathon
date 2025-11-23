@@ -4,6 +4,7 @@ const AuthModal = ({ type, onClose, setUser, onToggleType }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false); // 👁️ NEW
 
   const modalStyles = {
     overlay: {
@@ -70,6 +71,40 @@ const AuthModal = ({ type, onClose, setUser, onToggleType }) => {
       fontWeight: 600,
       fontSize: ".97rem",
     },
+
+    // ⭐ NEW STYLES FOR PASSWORD EYE BUTTON
+    passwordWrapper: {
+      position: "relative",
+      width: "100%",
+    },
+    eyeIcon: {
+      position: "absolute",
+      right: "12px",
+      top: "50%",
+      transform: "translateY(-50%)",
+      cursor: "pointer",
+      fontSize: "1.1rem",
+      color: "#3A8DFF",
+      userSelect: "none",
+    },
+  };
+
+  const validatePassword = (pwd) => {
+    if (pwd.length < 8) {
+      return "Password must be at least 8 characters long.";
+    }
+
+    const specialCharRegex = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/;
+    if (!specialCharRegex.test(pwd)) {
+      return "Password must contain at least one special character.";
+    }
+
+    const uppercaseRegex = /[A-Z]/;
+    if (!uppercaseRegex.test(pwd)) {
+      return "Password must contain at least one uppercase letter (A-Z).";
+    }
+
+    return null;
   };
 
   const validateAuth = () => {
@@ -77,6 +112,15 @@ const AuthModal = ({ type, onClose, setUser, onToggleType }) => {
       setError("Both email and password are mandatory.");
       return false;
     }
+
+    if (type === "signup") {
+      const passwordError = validatePassword(password);
+      if (passwordError) {
+        setError(passwordError);
+        return false;
+      }
+    }
+
     setError("");
     return true;
   };
@@ -84,26 +128,28 @@ const AuthModal = ({ type, onClose, setUser, onToggleType }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!validateAuth()) return;
+
     let users = JSON.parse(localStorage.getItem("med_users")) || [];
+
     if (type === "signup") {
       if (users.find((u) => u.email === email)) {
         setError("User already exists. Please log in.");
         return;
       }
+
       users.push({ email, password });
       localStorage.setItem("med_users", JSON.stringify(users));
+
       alert("Signup successful! You can now log in.");
       onClose();
     } else if (type === "login") {
       const foundUser = users.find(
         (u) => u.email === email && u.password === password
       );
+
       if (foundUser) {
-        localStorage.setItem(
-          "user",
-          JSON.stringify({ email: foundUser.email })
-        );
-        setUser({ email: foundUser.email });
+        localStorage.setItem("user", JSON.stringify({ email }));
+        setUser({ email });
         alert("Login successful!");
         onClose();
       } else {
@@ -112,7 +158,6 @@ const AuthModal = ({ type, onClose, setUser, onToggleType }) => {
     }
   };
 
-  // handle click outside modal to close
   const handleOverlayClick = (e) => {
     if (e.target === e.currentTarget) onClose();
   };
@@ -132,6 +177,7 @@ const AuthModal = ({ type, onClose, setUser, onToggleType }) => {
             ? "Login to Med Predict AI"
             : "Sign Up for Med Predict AI"}
         </h3>
+
         {error && (
           <div
             style={{
@@ -145,6 +191,7 @@ const AuthModal = ({ type, onClose, setUser, onToggleType }) => {
             {error}
           </div>
         )}
+
         <form onSubmit={handleSubmit} autoComplete="off">
           <input
             type="email"
@@ -154,20 +201,34 @@ const AuthModal = ({ type, onClose, setUser, onToggleType }) => {
             onChange={(e) => setEmail(e.target.value)}
             style={modalStyles.input}
           />
-          <input
-            type="password"
-            value={password}
-            placeholder="Password"
-            onChange={(e) => setPassword(e.target.value)}
-            style={modalStyles.input}
-          />
+
+          {/* ⭐ PASSWORD INPUT WITH EYE BUTTON */}
+          <div style={modalStyles.passwordWrapper}>
+            <input
+              type={showPassword ? "text" : "password"}
+              value={password}
+              placeholder="Password"
+              onChange={(e) => setPassword(e.target.value)}
+              style={modalStyles.input}
+            />
+
+            <span
+              style={modalStyles.eyeIcon}
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? "🙈" : "👁️"}
+            </span>
+          </div>
+
           <button type="submit" style={modalStyles.button}>
             {type === "login" ? "Login" : "Sign Up"}
           </button>
         </form>
+
         <button onClick={onClose} style={modalStyles.close}>
           Close
         </button>
+
         <div
           style={modalStyles.toggleLink}
           onClick={() =>
