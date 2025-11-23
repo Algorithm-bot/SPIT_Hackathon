@@ -195,6 +195,9 @@ const HistoryPage = ({ reports }) => {
                         padding: "20px",
                         backgroundColor: "#f9f9f9",
                         border: "1px solid #ddd",
+                        maxWidth: "100%",
+                        boxSizing: "border-box",
+                        overflow: "hidden",
                       }}
                     >
                       <div
@@ -291,6 +294,9 @@ const HistoryPage = ({ reports }) => {
                             borderRadius: "8px",
                             border: "2px solid #0047AB",
                             boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                            maxWidth: "100%",
+                            boxSizing: "border-box",
+                            overflow: "hidden",
                           }}
                         >
                           <h3
@@ -321,6 +327,8 @@ const HistoryPage = ({ reports }) => {
                               display: "grid",
                               gridTemplateColumns: "1fr 1fr",
                               gap: "15px",
+                              maxWidth: "100%",
+                              boxSizing: "border-box",
                             }}
                           >
                             <div
@@ -391,6 +399,9 @@ const HistoryPage = ({ reports }) => {
                                 backgroundColor: "#fff9e6",
                                 borderRadius: "6px",
                                 border: "1px solid #ffd700",
+                                maxWidth: "100%",
+                                boxSizing: "border-box",
+                                overflow: "hidden",
                               }}
                             >
                               <div
@@ -407,11 +418,15 @@ const HistoryPage = ({ reports }) => {
                                   fontFamily: "monospace",
                                   fontSize: "0.9em",
                                   wordBreak: "break-all",
+                                  overflowWrap: "break-word",
                                   color: "#856404",
                                   backgroundColor: "#fff",
                                   padding: "8px",
                                   borderRadius: "4px",
                                   border: "1px solid #ffd700",
+                                  maxWidth: "100%",
+                                  overflow: "hidden",
+                                  boxSizing: "border-box",
                                 }}
                               >
                                 {report.blockchain_entry.hash || "N/A"}
@@ -435,6 +450,9 @@ const HistoryPage = ({ reports }) => {
                                 backgroundColor: "#f0f7ff",
                                 borderRadius: "6px",
                                 border: "1px solid #cce5ff",
+                                maxWidth: "100%",
+                                boxSizing: "border-box",
+                                overflow: "hidden",
                               }}
                             >
                               <div
@@ -451,11 +469,15 @@ const HistoryPage = ({ reports }) => {
                                   fontFamily: "monospace",
                                   fontSize: "0.85em",
                                   wordBreak: "break-all",
+                                  overflowWrap: "break-word",
                                   color: "#0047AB",
                                   backgroundColor: "#fff",
                                   padding: "8px",
                                   borderRadius: "4px",
                                   border: "1px solid #cce5ff",
+                                  maxWidth: "100%",
+                                  overflow: "hidden",
+                                  boxSizing: "border-box",
                                 }}
                               >
                                 {report.blockchain_entry.previous_hash || "Genesis Block"}
@@ -550,6 +572,86 @@ const HistoryPage = ({ reports }) => {
                           Feature importance data not available for this report
                         </div>
                       )}
+
+                      {/* PDF Download Button */}
+                      <div
+                        style={{
+                          marginTop: "30px",
+                          padding: "20px",
+                          backgroundColor: "#ffffff",
+                          borderRadius: "8px",
+                          border: "2px solid #667eea",
+                          textAlign: "center",
+                        }}
+                      >
+                        <button
+                          onClick={async () => {
+                            try {
+                              const response = await fetch("http://localhost:8000/report/download-pdf", {
+                                method: "POST",
+                                headers: {
+                                  "Content-Type": "application/json",
+                                },
+                                body: JSON.stringify({ report: report }),
+                              });
+
+                              if (!response.ok) {
+                                throw new Error("Failed to generate PDF");
+                              }
+
+                              const blob = await response.blob();
+                              const url = window.URL.createObjectURL(blob);
+                              const a = document.createElement("a");
+                              a.href = url;
+                              const patientId = report.patient_id || "UNKNOWN";
+                              const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+                              a.download = `Medical_Report_${patientId}_${timestamp}.pdf`;
+                              document.body.appendChild(a);
+                              a.click();
+                              window.URL.revokeObjectURL(url);
+                              document.body.removeChild(a);
+                            } catch (error) {
+                              console.error("Error downloading PDF:", error);
+                              alert("Failed to download PDF. Please try again.");
+                            }
+                          }}
+                          style={{
+                            padding: "12px 24px",
+                            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                            color: "white",
+                            border: "none",
+                            borderRadius: "8px",
+                            cursor: "pointer",
+                            fontSize: "1em",
+                            fontWeight: 600,
+                            transition: "all 0.3s ease",
+                            boxShadow: "0 4px 15px rgba(102, 126, 234, 0.3)",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "8px",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = "translateY(-2px)";
+                            e.currentTarget.style.boxShadow = "0 6px 20px rgba(102, 126, 234, 0.4)";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = "translateY(0)";
+                            e.currentTarget.style.boxShadow = "0 4px 15px rgba(102, 126, 234, 0.3)";
+                          }}
+                        >
+                          📄 Download PDF Report
+                        </button>
+                        <p
+                          style={{
+                            marginTop: "10px",
+                            fontSize: "0.85em",
+                            color: "#666",
+                            fontStyle: "italic",
+                          }}
+                        >
+                          Download a complete PDF report with all clinical data, predictions, and blockchain information
+                        </p>
+                      </div>
                     </td>
                   </tr>
                 )}
