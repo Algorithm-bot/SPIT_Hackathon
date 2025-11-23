@@ -30,38 +30,47 @@ except Exception as e:
 # ---------------------------------------------------------
 # These match the Min/Max used to create your 0-1 training data.
 CLINICAL_RANGES = {
-    "Glucose": (50, 250),           # LOWERED Max from 500 -> 250 (Makes 185 a "High" 0.67 instead of "Low" 0.3)
-    "Cholesterol": (100, 350),      # Tightened
-    "Hemoglobin": (5, 18),
-    "Platelets": (50000, 450000),   # Standardized
-    "White_Blood_Cells": (2000, 20000),
-    "Red_Blood_Cells": (2, 7),
-    "Hematocrit": (20, 55),
-    "Mean_Corpuscular_Volume": (60, 110),
-    "Mean_Corpuscular_Hemoglobin": (15, 35),
-    "Mean_Corpuscular_Hemoglobin_Concentration": (25, 38),
-    "Insulin": (2, 40),             # Tightened to catch resistance earlier
-    "BMI": (15, 45),
-    "Systolic_Blood_Pressure": (80, 180),
-    "Diastolic_Blood_Pressure": (40, 110),
-    "Triglycerides": (50, 500),     # LOWERED Max from 1000 -> 500 (Makes 220 more significant)
-    "HbA1c": (3, 10),               # LOWERED Max from 15 -> 10 (Makes 8.2 a very high 0.74)
-    "LDL_Cholesterol": (50, 250),
-    "HDL_Cholesterol": (20, 100),
-    "ALT": (5, 150),
-    "AST": (5, 150),
-    "Heart_Rate": (40, 120),
-    "Creatinine": (0.5, 5),
-    "Troponin": (0, 10),            # Troponin is usually very low, max 10 covers emergencies
-    "C_reactive_Protein": (0, 20)
+    'Glucose': (70, 140),  # mg/dL
+            'Cholesterol': (125, 200),  # mg/dL
+            'Hemoglobin': (12, 18),  # g/dL
+            'Platelets': (150000, 450000),  # per microliter of blood
+            'White Blood Cells': (4000, 11000),  # per cubic millimeter of blood
+            'Red Blood Cells': (4.0, 6.1),  # million cells per microliter of blood
+            'Hematocrit': (36, 54),  # percentage
+            'Mean Corpuscular Volume': (80, 100),  # femtoliters
+            'Mean Corpuscular Hemoglobin': (27, 33),  # picograms
+            'Mean Corpuscular Hemoglobin Concentration': (32, 36),  # grams per deciliter
+            'Insulin': (2, 25),  # microU/mL
+            'BMI': (18.5, 30),  # kg/m^2
+            'Systolic Blood Pressure': (90, 140),  # mmHg
+            'Diastolic Blood Pressure': (60, 90),  # mmHg
+            'Triglycerides': (50, 200),  # mg/dL
+            'HbA1c': (4, 6.5),  # percentage
+            'LDL Cholesterol': (50, 130),  # mg/dL
+            'HDL Cholesterol': (40, 80),  # mg/dL
+            'ALT': (7, 56),  # U/L
+            'AST': (10, 40),  # U/L
+            'Heart Rate': (60, 100),  # beats per minute
+            'Creatinine': (0.6, 1.3),  # mg/dL
+            'Troponin': (0, 0.04),  # ng/mL
+            'C-reactive Protein': (0, 10),  # mg/L
+            
 }
+
+def get_clinical_key(feature_name):
+    """Convert feature name with underscores to space-separated format for CLINICAL_RANGES."""
+    # Map underscore names to space-separated names
+    return feature_name.replace('_', ' ')
 
 def normalize_value(key, value):
     """Converts raw value (e.g. 105) to 0-1 range based on clinical limits."""
-    if key not in CLINICAL_RANGES:
+    # Convert key to match CLINICAL_RANGES format
+    clinical_key = get_clinical_key(key)
+    
+    if clinical_key not in CLINICAL_RANGES:
         return value # Fallback
         
-    min_val, max_val = CLINICAL_RANGES[key]
+    min_val, max_val = CLINICAL_RANGES[clinical_key]
     
     # Formula: (x - min) / (max - min)
     normalized = (value - min_val) / (max_val - min_val)
@@ -91,10 +100,19 @@ def get_model_input(raw_data, model_type="xgboost"):
     
     # 1. Normalize Raw Values -> 0-1 Range
     normalized_features = []
+    print("\n--- Normalization Values ---")
     for feature in EXPECTED_FEATURES_ORDER:
         raw_val = float(raw_data.get(feature, 0))
         norm_val = normalize_value(feature, raw_val)
         normalized_features.append(norm_val)
+        # Get clinical range for display
+        clinical_key = get_clinical_key(feature)
+        if clinical_key in CLINICAL_RANGES:
+            min_val, max_val = CLINICAL_RANGES[clinical_key]
+            print(f"{feature:35s} | Raw: {raw_val:10.4f} | Range: [{min_val:6.2f}, {max_val:6.2f}] | Normalized: {norm_val:.6f}")
+        else:
+            print(f"{feature:35s} | Raw: {raw_val:10.4f} | Range: [N/A] | Normalized: {norm_val:.6f}")
+    print("--- End Normalization Values ---\n")
     
     # Reshape for model (1 sample, 24 features)
     # This 'X_normalized' now matches the format of your train.csv

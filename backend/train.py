@@ -11,21 +11,25 @@ import warnings
 warnings.filterwarnings("ignore")
 
 print("===================================================")
-print("      MEDI-GUARD MODEL TRAINING (train_test.csv)      ")
+print("      MEDI-GUARD MODEL TRAINING (train + test)      ")
 print("===================================================\n")
 
 # ----------------------------------------------------
-# 1. LOAD DATASET (ONLY train_test.csv)
+# 1. LOAD AND COMBINE DATASETS (train.csv + test.csv)
 # ----------------------------------------------------
-print("[1] Loading train_test.csv ...")
+print("[1] Loading train.csv and test.csv ...")
 
-# Path handling
-if os.path.exists("data/new_train.csv"):
-    df = pd.read_csv("data/new_train.csv")
-else:
-    df = pd.read_csv("data/new_train.csv")
+# Load both datasets
+train_df = pd.read_csv("data/train.csv")
+test_df = pd.read_csv("data/test.csv")
 
-print(f"Dataset Shape: {df.shape}")
+print(f"Train dataset shape: {train_df.shape}")
+print(f"Test dataset shape: {test_df.shape}")
+
+# Combine the datasets
+df = pd.concat([train_df, test_df], ignore_index=True)
+
+print(f"\nCombined dataset shape: {df.shape}")
 print("Class Distribution:")
 print(df["Disease"].value_counts(), "\n")
 
@@ -90,8 +94,8 @@ print(classification_report(y_test, pred, target_names=label_encoder.classes_))
 print("\n[3] Saving model and label encoder...\n")
 
 os.makedirs("model", exist_ok=True)
-joblib.dump(model, "model/medi_guard_model.pkl")
-joblib.dump(label_encoder, "model/label_encoder.pkl")
+joblib.dump(model, "model/best_model.pkl")
+joblib.dump(label_encoder, "model/label1_encoder.pkl")
 
 print("===================================================")
 print("           MODEL SAVED SUCCESSFULLY!")

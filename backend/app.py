@@ -1,13 +1,7 @@
-<<<<<<< HEAD
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import Optional
-=======
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
->>>>>>> dev
 from scaling_bridge import get_model_input
 from validator import validate_inputs
 from explainability import get_feature_importance
@@ -17,15 +11,13 @@ from blockchain import (
     get_patient_history, 
     get_block_by_hash,
     get_chain_stats,
-    determine_triage_level
+    determine_triage_level,
+    get_chain
 )
 import joblib
 import json
 import numpy as np
-<<<<<<< HEAD
 import uuid
-=======
->>>>>>> dev
 from datetime import datetime
 
 app = FastAPI()
@@ -33,15 +25,21 @@ app = FastAPI()
 # Add CORS middleware to allow frontend requests
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173"],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://localhost:3000",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:5174"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # Load model + label encoder
-model = joblib.load("model/medi_guard_merged_model.pkl")
-label_encoder = joblib.load("model/label_encoder.pkl")
+model = joblib.load("model/best_model.pkl")
+label_encoder = joblib.load("model/label1_encoder.pkl")
 
 class RawInput(BaseModel):
     Glucose: float
@@ -82,17 +80,13 @@ def predict(data: RawInput):
     
     raw_dict = data.dict()
     
-<<<<<<< HEAD
     # Extract patient_id if present (it's optional and not a clinical value)
     patient_id = raw_dict.pop("patient_id", None)
     
-=======
->>>>>>> dev
     # Print received raw clinical values
     print("\n📥 RECEIVED RAW CLINICAL VALUES:")
     print("-" * 80)
     for key, value in raw_dict.items():
-<<<<<<< HEAD
         if value is not None:
             try:
                 print(f"  {key:40s}: {value:>10.2f}")
@@ -100,9 +94,6 @@ def predict(data: RawInput):
                 print(f"  {key:40s}: {value}")
         else:
             print(f"  {key:40s}: None")
-=======
-        print(f"  {key:40s}: {value:>10.2f}")
->>>>>>> dev
     
     errors = validate_inputs(raw_dict)
 
@@ -168,7 +159,6 @@ def predict(data: RawInput):
                 for i, (feature, imp) in enumerate(feature_importance_pairs[:5], 1):
                     print(f"  {i}. {feature:40s}: {imp:.4f}")
 
-<<<<<<< HEAD
         # Generate patient ID if not provided
         if not patient_id:
             patient_id = f"PAT_{uuid.uuid4().hex[:12].upper()}"
@@ -185,12 +175,6 @@ def predict(data: RawInput):
         print(f"   Hash: {blockchain_entry.get('hash', 'N/A')[:16]}...")
         print(f"   Previous Hash: {blockchain_entry.get('previous_hash', 'N/A')[:16]}...")
         print(f"   Triage Level: {triage_level}")
-=======
-        # Blockchain logging
-        blockchain_entry = add_block("patient_1234", prediction_label)
-        print(f"\n🔗 BLOCKCHAIN ENTRY CREATED:")
-        print(f"   Hash: {blockchain_entry.get('hash', 'N/A')[:16]}...")
->>>>>>> dev
         print(f"   Timestamp: {datetime.fromtimestamp(blockchain_entry.get('timestamp', 0)).strftime('%Y-%m-%d %H:%M:%S')}")
 
         print("\n" + "="*80)
@@ -199,7 +183,6 @@ def predict(data: RawInput):
 
         return {
             "status": "success",
-<<<<<<< HEAD
             "patient_id": patient_id,
             "prediction": prediction_label,
             "triage_level": triage_level,
@@ -212,12 +195,6 @@ def predict(data: RawInput):
                 "timestamp": blockchain_entry.get("timestamp"),
                 "triage_level": blockchain_entry.get("triage_level")
             }
-=======
-            "prediction": prediction_label,
-            "probabilities": probabilities,
-            "feature_importance": importance,
-            "blockchain_entry": blockchain_entry
->>>>>>> dev
         }
     except Exception as e:
         print(f"\n❌ PREDICTION ERROR: {str(e)}")
@@ -228,7 +205,6 @@ def predict(data: RawInput):
             "status": "error",
             "message": f"Prediction failed: {str(e)}"
         }
-<<<<<<< HEAD
 
 @app.get("/blockchain/verify")
 def verify_blockchain():
@@ -322,5 +298,3 @@ def audit_blockchain():
         "statistics": stats,
         "chain": formatted_chain
     }
-=======
->>>>>>> dev
